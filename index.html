@@ -257,13 +257,11 @@ function w(t,mw,sz){doc.setFontSize(sz);return doc.splitTextToSize(t||'',mw);}fu
 var biz=E('inpBiz').value,con=E('inpCon').value,ts=E('selTeam'),tt=ts.value?ts.options[ts.selectedIndex].text:'',d=getIndData(),lb=d?d.label:'',ds=E('inpDate').value||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),note=E('inpNote').value;
 // PAGE 1 HEADER
 R(0,0,W,108,NV);R(0,0,W,4,[0,28,42]);
-// Jobber wordmark top right
-doc.setFontSize(22);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('JOBBER',W-M,42,{align:'right'});
-// Green square icon
-R(W-M-doc.getTextWidth('JOBBER')-30,28,20,20,GR);doc.setFontSize(12);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text('J',W-M-doc.getTextWidth('JOBBER')-20,42,{align:'center'});
+// Jobber wordmark top right - white outlined badge + text
+doc.setFontSize(22);doc.setFont('helvetica','bold');var jbW=doc.getTextWidth('JOBBER');var logoRX=W-M;doc.setTextColor(255,255,255);doc.text('JOBBER',logoRX,44,{align:'right'});var iconX=logoRX-jbW-30,iconY=29,iconS=22;doc.setDrawColor(255,255,255);doc.setLineWidth(2);doc.roundedRect(iconX,iconY,iconS,iconS,5,5,'S');doc.setDrawColor(255,255,255);doc.setLineWidth(1.2);doc.roundedRect(iconX+4,iconY+4,iconS-8,iconS-8,3,3,'S');
 y=50;doc.setFontSize(28);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Action Plan for '+biz,M,y);y+=18;doc.setFontSize(10);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');doc.text('A tailored roadmap for your '+lb.toLowerCase()+' operations',M,y);y+=16;var mp=[];if(lb)mp.push(lb);if(con)mp.push(con);if(tt)mp.push(tt);mp.push(ds);doc.setFontSize(7.5);doc.setTextColor(180,200,210);doc.text(mp.join(' \u2022 '),M,y);
-// Green accent bar - thick, flush with header bottom
-R(M,108,cW*0.7,8,GR);y=130;
+// Green accent bar - thick rounded highlight like original
+doc.setFillColor(GR[0],GR[1],GR[2]);doc.roundedRect(M,107,cW*0.7,12,6,6,'F');y=132;
 if(note){var nl=w(note,cW-24,9);var nh=nl.length*13+16;R(M,y,cW,nh,[240,245,248]);R(M,y,3,nh,GR);var ny=y+12;doc.setFontSize(9);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','italic');nl.forEach(function(l){doc.text(l,M+14,ny);ny+=13;});y+=nh+8;}
 var cols=[cW*0.24,cW*0.29,cW*0.27,cW*0.20];R(M,y,cW,22,NV);var hx=M;['BUSINESS GOALS','JOBBER FEATURES','IMPACT & VALUE','NOTES'].forEach(function(t,i){doc.setFontSize(7);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text(t,hx+10,y+14);hx+=cols[i];});y+=22;
 rows.forEach(function(r,i){var ie=i%2===1,x0=M,x1=M+cols[0],x2=x1+cols[1],x3=x2+cols[2];var gl=w(r.goal,cols[0]-50,12),cl=r.challenge?w('"'+r.challenge+'"',cols[0]-50,7.5):[];var fws=r.features.map(function(f){var t=f.text||'';return t?{lines:w(t,cols[1]-30,9),text:t,link:f.link||autoLink(t)}:null;}).filter(Boolean);var fh=fws.reduce(function(s,fw){return s+fw.lines.length*12+5;},0);var il=w(r.impact,cols[2]-28,9),ntl=r.note?w(r.note,cols[3]-28,9):[];var rh=Math.max(gl.length*15+(cl.length?cl.length*10+8:0)+28,fh+28,il.length*12+28,ntl.length*12+28,66);chk(rh+2);R(x0,y,cW,rh,ie?RA:WH);R(x1,y,cols[1],rh,ie?[228,238,244]:[236,243,248]);R(x3,y,cols[3],rh,CD);gc(x0+20,y+22,11,i+1);var gy=y+14;doc.setFontSize(12);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');gl.forEach(function(l){doc.text(l,x0+38,gy+10);gy+=15;});if(cl.length){gy+=2;doc.setFontSize(7.5);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','italic');cl.forEach(function(l){doc.text(l,x0+38,gy+7);gy+=10;});}var fy=y+14;fws.forEach(function(fw){doc.setFillColor(GR[0],GR[1],GR[2]);doc.circle(x1+17,fy+6,2,'F');var hl=!!fw.link;doc.setFontSize(9);doc.setTextColor(hl?LB[0]:NV[0],hl?LB[1]:NV[1],hl?LB[2]:NV[2]);doc.setFont('helvetica','normal');fw.lines.forEach(function(l){doc.text(l,x1+24,fy+9);if(hl){var tw=doc.getTextWidth(l);doc.setDrawColor(LB[0],LB[1],LB[2]);doc.setLineWidth(0.4);doc.line(x1+24,fy+10.5,x1+24+tw,fy+10.5);}fy+=12;});if(hl){doc.link(x1+14,fy-fw.lines.length*12,cols[1]-28,fw.lines.length*12,{url:fw.link});}fy+=5;});var iy=y+14;doc.setFontSize(9.5);doc.setTextColor(70,88,100);doc.setFont('helvetica','italic');il.forEach(function(l){doc.text(l,x2+14,iy+9);iy+=12.5;});if(r.note){var ny2=y+14;doc.setFontSize(9);doc.setTextColor(BK[0],BK[1],BK[2]);doc.setFont('helvetica','normal');ntl.forEach(function(l){doc.text(l,x3+14,ny2+9);ny2+=12;});}doc.setDrawColor(BD[0],BD[1],BD[2]);doc.setLineWidth(0.4);doc.line(x0,y+rh,M+cW,y+rh);doc.setDrawColor(GX[0],GX[1],GX[2]);doc.setLineWidth(0.3);[x1,x2,x3].forEach(function(xx){doc.line(xx,y,xx,y+rh);});y+=rh;});R(M,y,cW,2,NV);y+=20;
@@ -281,11 +279,11 @@ if(ri.coldQuotePercent&&ri.quotesPerWeek&&ri.avgJobValue){var cr2=ri.quotesPerWe
 doc.addPage();y=M;
 // ROI page header
 R(0,0,W,68,NV);R(0,0,W,4,[0,28,42]);
-// Jobber wordmark
-doc.setFontSize(22);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('JOBBER',W-M,42,{align:'right'});R(W-M-doc.getTextWidth('JOBBER')-30,28,20,20,GR);doc.setFontSize(12);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text('J',W-M-doc.getTextWidth('JOBBER')-20,42,{align:'center'});
+// Jobber wordmark top right - white outlined badge + text
+doc.setFontSize(22);doc.setFont('helvetica','bold');var jbW2=doc.getTextWidth('JOBBER');var logoRX2=W-M;doc.setTextColor(255,255,255);doc.text('JOBBER',logoRX2,44,{align:'right'});var iconX2=logoRX2-jbW2-30,iconY2=29,iconS2=22;doc.setDrawColor(255,255,255);doc.setLineWidth(2);doc.roundedRect(iconX2,iconY2,iconS2,iconS2,5,5,'S');doc.setDrawColor(255,255,255);doc.setLineWidth(1.2);doc.roundedRect(iconX2+4,iconY2+4,iconS2-8,iconS2-8,3,3,'S');
 doc.setFontSize(26);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Why Jobber?',M,38);doc.setFontSize(11);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');doc.text('Real results from service pros like you',M,52);
-// Green accent bar - thick, flush with header bottom
-R(M,68,cW*0.7,8,GR);y=92;
+// Green accent bar - thick rounded highlight like original
+doc.setFillColor(GR[0],GR[1],GR[2]);doc.roundedRect(M,67,cW*0.7,12,6,6,'F');y=94;
 
 // ALWAYS show blanket stats with bordered heading
 doc.setFontSize(14);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');
@@ -310,8 +308,16 @@ y+=4;R(M,y,cW,56,NV);R(M,y,5,56,GR);doc.setFontSize(14);doc.setTextColor(255,255
 // Disclaimer
 doc.setFontSize(7);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','italic');doc.text('* Estimates based on the numbers you shared. Actual results may vary based on business size, workflow, and adoption.',M,y);}
 
-// Footer
-var fy=H-36;R(0,fy,W,36,NV);R(0,fy,W,2,GR);doc.setFontSize(8);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('Jobber - Helping people in service businesses be successful',M,fy+20);doc.setFontSize(8);doc.setTextColor(GR[0],GR[1],GR[2]);doc.text('getjobber.com',W-M,fy+20,{align:'right'});doc.link(W-M-doc.getTextWidth('getjobber.com'),fy+10,doc.getTextWidth('getjobber.com'),14,{url:'https://www.getjobber.com'});
+// Footer with logo
+var fy=H-36;R(0,fy,W,36,NV);R(0,fy,W,2,GR);
+// Footer Jobber icon
+var fIconX=M,fIconY=fy+10,fIconS=16;doc.setDrawColor(255,255,255);doc.setLineWidth(1.5);doc.roundedRect(fIconX,fIconY,fIconS,fIconS,3,3,'S');doc.setDrawColor(255,255,255);doc.setLineWidth(0.8);doc.roundedRect(fIconX+3,fIconY+3,fIconS-6,fIconS-6,2,2,'S');
+// Footer JOBBER text
+doc.setFontSize(10);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('JOBBER',fIconX+fIconS+8,fy+22);var fJbW=doc.getTextWidth('JOBBER');
+// Footer tagline
+doc.setFontSize(8);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('Helping people in service businesses be successful',fIconX+fIconS+8+fJbW+10,fy+22);
+// Footer URL
+doc.setFontSize(8);doc.setTextColor(GR[0],GR[1],GR[2]);doc.text('getjobber.com',W-M,fy+22,{align:'right'});doc.link(W-M-doc.getTextWidth('getjobber.com'),fy+10,doc.getTextWidth('getjobber.com'),14,{url:'https://www.getjobber.com'});
 doc.save((biz?biz.replace(/[^a-zA-Z0-9 ]/g,'').trim().replace(/\s+/g,'_'):'Prospect')+'_Jobber_Action_Plan.pdf');}
 refreshHdr();updateBadges();
 window.addEventListener('beforeunload',function(e){if(rows.length>0){e.preventDefault();e.returnValue='';}});
