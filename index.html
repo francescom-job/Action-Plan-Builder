@@ -478,11 +478,441 @@ function validateForExport(){
 function exportPDF(){
   const issues=validateForExport();
   if(issues.length){showToast('Before exporting: '+issues.join(', '));return;}
-  // NOTE: For full production PDF with navy banners, green accents, logos, clickable links,
-  // and the ROI page, paste your original _doExportPDF() function here.
-  // The current version uses browser print as a reliable fallback.
-  showToast('Opening print dialog — save as PDF');
-  setTimeout(()=>window.print(),500);
+  if(!window.jspdf){
+    const btn=document.getElementById('btnExportPDF');btn.textContent='Loading PDF...';btn.disabled=true;
+    loadJsPDF().then(()=>{btn.textContent='⬇ Download PDF';btn.disabled=false;_doExportPDF();}).catch(e=>{btn.textContent='⬇ Download PDF';btn.disabled=false;alert(e.message);});
+    return;
+  }
+  _doExportPDF();
+}
+
+function _doExportPDF(){
+  try{
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+  const M=44,cW=W-2*M;let y=0;
+
+  const NAVY=[1,41,57],GREEN=[168,227,0],GREEN_DK=[130,180,0];
+  const GRAY=[90,105,118],GRAY_LT=[160,170,178],GRAY_XLT=[215,220,225];
+  const BDR=[230,233,237],CARD=[250,251,252],BLACK=[20,34,46],WHITE=[255,255,255];
+  const ROW_ALT=[247,249,251],LINK_BLUE=[5,141,199];
+
+  function wrap(text,maxW,sz){doc.setFontSize(sz);return doc.splitTextToSize(text||'',maxW);}
+  function R(x,yy,w,h,c){doc.setFillColor(...c);doc.rect(x,yy,w,h,'F');}
+  function checkPage(needed){if(y+needed>H-44){doc.addPage();y=M;return true;}return false;}
+  function greenCircle(cx,cy,r,num){
+    doc.setDrawColor(...GREEN);doc.setLineWidth(1.8);doc.setFillColor(...WHITE);
+    doc.circle(cx,cy,r,'FD');
+    doc.setFontSize(r*1.3);doc.setTextColor(...NAVY);doc.setFont('helvetica','bold');
+    doc.text(String(num),cx,cy+r*0.4,{align:'center'});
+  }
+
+  const biz=document.getElementById("inpBiz").value;
+  const con=document.getElementById("inpCon").value;
+  const ts=document.getElementById("selTeam");
+  const teamTxt=ts.value?ts.options[ts.selectedIndex].text:'';
+  const d=getIndData();const indLabel=d?d.label:'';
+  const dateStr=document.getElementById("inpDate").value||new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  const note=document.getElementById("inpNote").value;
+
+  // ═══ HEADER BANNER ═══
+  const bannerH=108;
+  R(0,0,W,bannerH,NAVY);R(0,0,W,4,[0,28,42]);
+  y=50;
+  doc.setFontSize(28);doc.setTextColor(...WHITE);doc.setFont('helvetica','bold');
+  doc.text(biz?('Action Plan for '+biz):'Your Action Plan',M,y);
+  y+=18;
+  doc.setFontSize(10);doc.setTextColor(168,227,0);doc.setFont('helvetica','normal');
+  doc.text(biz?'A tailored roadmap to streamline and grow your '+indLabel.toLowerCase()+' business':'A tailored roadmap to streamline operations and grow your business',M,y);
+  y+=16;
+  const metaParts=[];
+  if(indLabel)metaParts.push(indLabel);if(con)metaParts.push(con);if(teamTxt)metaParts.push(teamTxt);metaParts.push(dateStr);
+  doc.setFontSize(7.5);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');
+  doc.text(metaParts.join('  •  '),M,y);
+  y=bannerH+14;
+
+  // ═══ PERSONAL NOTE ═══
+  if(note){
+    const noteLines=wrap(note,cW-24,9);const noteBoxH=noteLines.length*13+16;
+    R(M,y,cW,noteBoxH,[240,245,248]);R(M,y,3,noteBoxH,GREEN);
+    doc.setFontSize(16);doc.setTextColor(...GREEN);doc.setFont('helvetica','bold');
+    doc.text('\u201C',M+10,y+14);
+    let ny=y+12;
+    doc.setFontSize(9);doc.setTextColor(...GRAY);doc.setFont('helvetica','italic');
+    noteLines.forEach(l=>{doc.text(l,M+22,ny);ny+=13;});
+    y+=noteBoxH+8;
+  }
+
+  // ═══ TABLE HEADER ═══
+  const cols=[{w:cW*0.24},{w:cW*0.29},{w:cW*0.27},{w:cW*0.20}];
+  const hdrH=22;
+  R(M,y,cW,hdrH,NAVY);
+  const hdrDefs=['BUSINESS GOALS','JOBBER FEATURES','IMPACT & VALUE','NOTES'];
+  let hx=M;
+  hdrDefs.forEach((t,hi)=>{doc.setFontSize(7);doc.setTextColor(...WHITE);doc.setFont('helvetica','bold');doc.text(t,hx+10,y+14);hx+=cols[hi].w;});
+  y+=hdrH;
+
+  // ═══ GOAL ROWS ═══
+  const P=14;
+  rows.forEach((r,i)=>{
+    const isEven=(i%2===1);
+    const x0=M,x1=M+cols[0].w,x2=x1+cols[1].w,x3=x2+cols[2].w,xEnd=M+cW;
+    const goalLines=wrap(r.goal,cols[0].w-P-36,12);
+    const challengeLines=r.challenge?wrap('\u201C'+r.challenge+'\u201D',cols[0].w-P-36,7.5):[];
+    const featWraps=r.features.map(f=>{
+      const t=f.text||'';if(!t)return{lines:[],text:'',link:''};
+      return{lines:wrap(t,cols[1].w-2*P-8,9),text:t,link:f.link||autoLink(t)};
+    }).filter(fw=>fw.text);
+    const featLineH=12,featItemGap=5;
+    const featTotalH=featWraps.reduce((s,fw)=>s+fw.lines.length*featLineH+featItemGap,0);
+    const impactLines=wrap(r.impact,cols[2].w-2*P,9);
+    const noteLines=r.note?wrap(r.note,cols[3].w-2*P,9):[];
+    const goalH=goalLines.length*15+(challengeLines.length?challengeLines.length*10+8:0)+2*P;
+    const featH=featTotalH+2*P;const impH=impactLines.length*12+2*P;const noteH=noteLines.length*12+2*P;
+    const rowH=Math.max(goalH,featH,impH,noteH,66);
+    checkPage(rowH+2);
+
+    R(x0,y,cW,rowH,isEven?ROW_ALT:WHITE);
+    R(x1,y,cols[1].w,rowH,isEven?[228,238,244]:[236,243,248]);
+    R(x3,y,cols[3].w,rowH,CARD);
+
+    greenCircle(x0+20,y+22,11,i+1);
+
+    let gy=y+P;
+    doc.setFontSize(12);doc.setTextColor(...NAVY);doc.setFont('helvetica','bold');
+    goalLines.forEach(l=>{doc.text(l,x0+38,gy+10);gy+=15;});
+    if(challengeLines.length){gy+=2;doc.setFontSize(7.5);doc.setTextColor(...GRAY);doc.setFont('helvetica','italic');challengeLines.forEach(l=>{doc.text(l,x0+38,gy+7);gy+=10;});}
+
+    let fy=y+P;
+    featWraps.forEach(fw=>{
+      doc.setFillColor(...GREEN);doc.circle(x1+P+3,fy+6,2,'F');
+      const hasLink=!!fw.link;
+      doc.setFontSize(9);doc.setTextColor(...(hasLink?LINK_BLUE:NAVY));doc.setFont('helvetica','normal');
+      fw.lines.forEach(l=>{
+        doc.text(l,x1+P+10,fy+9);
+        if(hasLink){const tw=doc.getTextWidth(l);doc.setDrawColor(...LINK_BLUE);doc.setLineWidth(0.4);doc.line(x1+P+10,fy+10.5,x1+P+10+tw,fy+10.5);}
+        fy+=featLineH;
+      });
+      if(hasLink){const linkH=fw.lines.length*featLineH;doc.link(x1+P,fy-linkH,cols[1].w-2*P,linkH,{url:fw.link});}
+      fy+=featItemGap;
+    });
+
+    let iy=y+P;
+    doc.setFontSize(9.5);doc.setTextColor(70,88,100);doc.setFont('helvetica','italic');
+    impactLines.forEach(l=>{doc.text(l,x2+P,iy+9);iy+=12.5;});
+
+    if(r.note){let ny=y+P;doc.setFontSize(9);doc.setTextColor(...BLACK);doc.setFont('helvetica','normal');noteLines.forEach(l=>{doc.text(l,x3+P,ny+9);ny+=12;});}
+
+    doc.setDrawColor(...BDR);doc.setLineWidth(0.4);doc.line(x0,y+rowH,xEnd,y+rowH);
+    doc.setDrawColor(...GRAY_XLT);doc.setLineWidth(0.3);
+    [x1,x2,x3].forEach(xx=>{doc.line(xx,y,xx,y+rowH);});
+    y+=rowH;
+  });
+  R(M,y,cW,2,NAVY);y+=20;
+
+  // ═══ NEXT STEPS ═══
+  if(steps.length&&steps.some(s=>s.action)){
+    checkPage(50+steps.length*46);
+    R(M,y-4,cW,34,NAVY);R(M,y-4,5,34,GREEN);
+    doc.setFontSize(15);doc.setTextColor(...WHITE);doc.setFont('helvetica','bold');
+    doc.text('NEXT STEPS',M+18,y+14);y+=40;
+    steps.forEach((s,si)=>{
+      if(!s.action)return;
+      checkPage(46);const rowY=y;
+      R(M,rowY,cW,42,si%2===0?WHITE:ROW_ALT);
+      greenCircle(M+18,rowY+21,12,si+1);
+      const sx=M+42,totalW=cW-42;
+      const actionW=totalW*0.55,ownerW=totalW*0.25,dateW=totalW*0.20;
+      [[s.action,sx,actionW,'ACTION'],[s.owner,sx+actionW,ownerW,'OWNER'],[s.date,sx+actionW+ownerW,dateW,'DATE']].forEach(([val,lx,w,label])=>{
+        doc.setFontSize(7);doc.setTextColor(...GRAY_LT);doc.setFont('helvetica','bold');doc.text(label,lx,rowY+12);
+        doc.setFontSize(11);doc.setTextColor(...NAVY);doc.setFont('helvetica','normal');
+        wrap(val||'',w-8,11).forEach((l,li)=>{doc.text(l,lx,rowY+24+li*13);});
+      });
+      y+=42;doc.setDrawColor(...BDR);doc.setLineWidth(0.3);doc.line(M,y,M+cW,y);y+=4;
+    });
+    R(M,y,cW,2,GREEN);y+=10;
+  }
+
+  // ═══ ROI PAGE ═══
+  const roiCrew=parseInt(document.getElementById('inpCrew').value)||0;
+  const roiJobs=parseInt(document.getElementById('inpJobs').value)||0;
+  const roiAvg=parseInt(document.getElementById('inpAvgJob').value)||0;
+
+  doc.addPage();y=M;
+  R(0,0,W,68,NAVY);R(0,0,W,4,[0,28,42]);
+  doc.setFontSize(26);doc.setTextColor(...WHITE);doc.setFont('helvetica','bold');
+  doc.text('Why Jobber?',M,38);
+  doc.setFontSize(11);doc.setTextColor(168,227,0);doc.setFont('helvetica','normal');
+  doc.text('Real results from businesses like yours',M,52);
+  y=92;
+
+  doc.setFontSize(18);doc.setTextColor(...NAVY);doc.setFont('helvetica','bold');
+  doc.text('WHAT OUR MEMBERS ARE SEEING',W/2,y,{align:'center'});
+  const headW=doc.getTextWidth('WHAT OUR MEMBERS ARE SEEING');
+  doc.setDrawColor(168,227,0);doc.setLineWidth(2.5);
+  doc.line(W/2-headW/2,y+4,W/2+headW/2,y+4);y+=18;
+
+  const stats=[
+    {num:'7+',unit:'hrs/week',desc:'saved on admin with\nautomated workflows'},
+    {num:'4x',unit:'faster',desc:'payments vs. checks\nwith Jobber Payments'},
+    {num:'2x',unit:'faster quotes',desc:'professional quoting\nwith online approval'},
+    {num:'29M+',unit:'jobs',desc:'completed by Jobber-\npowered businesses'}
+  ];
+  const cardGap=14,cardW=(cW-(stats.length-1)*cardGap)/stats.length,cardH=92;
+  stats.forEach((st,si)=>{
+    const cx=M+si*(cardW+cardGap);
+    R(cx+1,y+1,cardW,cardH,[230,233,237]);R(cx,y,cardW,cardH,[245,248,250]);R(cx,y,cardW,4,GREEN);
+    doc.setFontSize(36);doc.setTextColor(...NAVY);doc.setFont('helvetica','bold');
+    doc.text(st.num,cx+cardW/2,y+34,{align:'center'});
+    doc.setFontSize(11);doc.setTextColor(...GREEN_DK);doc.setFont('helvetica','bold');
+    doc.text(st.unit,cx+cardW/2,y+50,{align:'center'});
+    doc.setFontSize(8.5);doc.setTextColor(...GRAY);doc.setFont('helvetica','normal');
+    st.desc.split('\n').forEach((dl,di)=>{doc.text(dl,cx+cardW/2,y+64+di*11,{align:'center'});});
+  });
+  y+=cardH+14;
+
+  // ═══ PERSONALIZED ROI (if inputs provided) ═══
+  if(roiCrew&&roiJobs&&roiAvg&&rows.length){
+    const goalNames=rows.map(r=>(r.goal||'').toLowerCase());
+    const matched=[];
+    for(const[key,cfg]of Object.entries(ROI_MAP)){if(cfg.match.some(kw=>goalNames.some(g=>g.includes(kw))))matched.push(key);}
+    if(!matched.includes('admin')&&rows.length>=2)matched.push('admin');
+    if(!matched.length)matched.push('admin');
+    const results=matched.map(k=>{const cfg=ROI_MAP[k];const calc=cfg.calc(roiCrew,roiJobs,roiAvg);return{...cfg,...calc,key:k};});
+    let total=0;results.forEach(r=>{if(r.isNotDollar)total+=r.dollarValue||0;else total+=parseInt(r.value.replace(/[^0-9]/g,''))||0;});
+    const annualRev=roiJobs*roiAvg*52;
+
+    R(M,y,cW,36,NAVY);
+    doc.setFontSize(13);doc.setTextColor(...WHITE);doc.setFont('helvetica','bold');
+    doc.text('YOUR ESTIMATED ROI WITH JOBBER',M+14,y+16);
+    doc.setFontSize(9);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');
+    doc.text(roiCrew+' crew × '+roiJobs+' jobs/week × 
+
+// ═══ ROI ENGINE ═══
+const ROI_MAP={
+  admin:{match:['admin','automate','consolidate','transition','simplify'],icon:'⏱',label:'Time Saved on Admin',calc:(c,j,a)=>{const h=Math.min(3+Math.floor(c*0.8),12);const s=h*52*22;return{value:'$'+s.toLocaleString(),detail:'~'+h+' hrs/week × $22/hr × 52 weeks',assumption:'Admin cost $22/hr, scaling with team of '+c,tag:'Time savings'};}},
+  quotes:{match:['quote','bid','estimate','win more','revenue','increase revenue'],icon:'📈',label:'Revenue from Winning More Quotes',calc:(c,j,a)=>{const s=Math.round(j*a*0.10*52);return{value:'$'+s.toLocaleString(),detail:'10% improvement on $'+(j*a).toLocaleString()+'/week',assumption:'Professional quoting typically improves close rate ~10%',tag:'New revenue'};}},
+  cashflow:{match:['cash flow','paid faster','payment','billing','auto-billing','invoic'],icon:'💳',label:'Faster Payment Collection',calc:(c,j,a)=>{const d=14;return{value:d+' days faster',detail:'Reduces DSO by ~'+d+' days',assumption:'Shift from 30-day invoicing to same-day digital payment',tag:'Cash flow',isNotDollar:true,dollarValue:Math.round(j*a*52*(d/365)*0.08)};}},
+  followup:{match:['reputation','referral','review','cancellation','no-show','grow','acquire','client','customer'],icon:'🔄',label:'Recovered Revenue from Follow-ups',calc:(c,j,a)=>{const s=Math.round(j*a*0.05*52);return{value:'$'+s.toLocaleString(),detail:'5% of $'+(j*a).toLocaleString()+'/week recovered',assumption:'Automated follow-ups recover ~5% of cold revenue',tag:'Recovered revenue'};}},
+  routing:{match:['route','routing','scheduling','efficiency','daily efficiency'],icon:'🗺',label:'Increased Capacity from Routing',calc:(c,j,a)=>{const extra=Math.max(1,Math.round(j*0.15));const s=extra*a*52;return{value:'$'+Math.round(s).toLocaleString(),detail:'~'+extra+' more jobs/week at $'+a,assumption:'Route optimization typically adds 15% more capacity',tag:'Capacity gain'};}},
+  labor:{match:['labor','recruit','retain','team','crew','scale','technician'],icon:'👥',label:'Reduced Labor Waste',calc:(c,j,a)=>{const s=Math.round(c*2.5*52*20);return{value:'$'+s.toLocaleString(),detail:'~2.5 hrs/week per person in reduced waste',assumption:'GPS and mobile scheduling reduce waste ~2.5 hrs/week at $20/hr',tag:'Labor efficiency'};}},
+  profitability:{match:['profitability','profit','costing','pricing','understand','margin'],icon:'🎯',label:'Margin Improvement from Costing',calc:(c,j,a)=>{const s=Math.round(j*a*52*0.03);return{value:'$'+s.toLocaleString(),detail:'~3% margin improvement on $'+(j*a*52).toLocaleString()+'/year',assumption:'Job costing typically improves margins 3-5%',tag:'Margin gain'};}}
+};
+
+function computeROI(){
+  const crew=parseInt(document.getElementById('inpCrew').value)||0;
+  const jobs=parseInt(document.getElementById('inpJobs').value)||0;
+  const avg=parseInt(document.getElementById('inpAvgJob').value)||0;
+  const section=document.getElementById('roiSection');
+  const sidebar=document.getElementById('roiSidebarPreview');
+  if(!crew||!jobs||!avg||!rows.length){section.style.display='none';sidebar.style.display='none';return;}
+  const goalNames=rows.map(r=>(r.goal||'').toLowerCase());
+  const matched=[];
+  for(const[key,cfg]of Object.entries(ROI_MAP)){if(cfg.match.some(kw=>goalNames.some(g=>g.includes(kw))))matched.push(key);}
+  if(!matched.includes('admin')&&rows.length>=2)matched.push('admin');
+  if(!matched.length)matched.push('admin');
+  const results=matched.map(k=>{const cfg=ROI_MAP[k];const calc=cfg.calc(crew,jobs,avg);return{...cfg,...calc,key:k};});
+  let total=0;results.forEach(r=>{if(r.isNotDollar)total+=r.dollarValue||0;else total+=parseInt(r.value.replace(/[^0-9]/g,''))||0;});
+  document.getElementById('roiSubtitle').textContent=crew+' crew × '+jobs+' jobs/week × $'+avg+' avg = $'+(jobs*avg*52).toLocaleString()+'/year';
+  document.getElementById('roiTotalNum').textContent='$'+total.toLocaleString();
+  const grid=document.getElementById('roiGrid');
+  grid.innerHTML=results.map(r=>'<div class="roi-card"><div class="rc-icon">'+r.icon+'</div><div class="rc-value '+(r.isNotDollar?'':'green')+'">'+r.value+'</div><div class="rc-label">'+r.label+'</div><div class="rc-detail">'+r.detail+'</div><div class="rc-tag">'+r.tag+'</div></div>').join('');
+  if(results.length%2!==0)grid.innerHTML+='<div class="roi-card" style="background:var(--card);"></div>';
+  document.getElementById('roiAssumptions').innerHTML='<strong>Assumptions:</strong> '+results.map(r=>r.assumption).join(' · ')+' · <em>Estimates based on industry averages.</em>';
+  section.style.display='block';sidebar.style.display='block';
+  document.getElementById('roiSidebarTotal').textContent='$'+total.toLocaleString();
+}
+
+// ═══ INIT ═══
+refreshHdr();updateBadges();loadSaved();
+
+// Warn before leaving with unsaved work
+window.addEventListener('beforeunload',e=>{if(rows.length>0){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
++roiAvg+' avg = 
+
+// ═══ ROI ENGINE ═══
+const ROI_MAP={
+  admin:{match:['admin','automate','consolidate','transition','simplify'],icon:'⏱',label:'Time Saved on Admin',calc:(c,j,a)=>{const h=Math.min(3+Math.floor(c*0.8),12);const s=h*52*22;return{value:'$'+s.toLocaleString(),detail:'~'+h+' hrs/week × $22/hr × 52 weeks',assumption:'Admin cost $22/hr, scaling with team of '+c,tag:'Time savings'};}},
+  quotes:{match:['quote','bid','estimate','win more','revenue','increase revenue'],icon:'📈',label:'Revenue from Winning More Quotes',calc:(c,j,a)=>{const s=Math.round(j*a*0.10*52);return{value:'$'+s.toLocaleString(),detail:'10% improvement on $'+(j*a).toLocaleString()+'/week',assumption:'Professional quoting typically improves close rate ~10%',tag:'New revenue'};}},
+  cashflow:{match:['cash flow','paid faster','payment','billing','auto-billing','invoic'],icon:'💳',label:'Faster Payment Collection',calc:(c,j,a)=>{const d=14;return{value:d+' days faster',detail:'Reduces DSO by ~'+d+' days',assumption:'Shift from 30-day invoicing to same-day digital payment',tag:'Cash flow',isNotDollar:true,dollarValue:Math.round(j*a*52*(d/365)*0.08)};}},
+  followup:{match:['reputation','referral','review','cancellation','no-show','grow','acquire','client','customer'],icon:'🔄',label:'Recovered Revenue from Follow-ups',calc:(c,j,a)=>{const s=Math.round(j*a*0.05*52);return{value:'$'+s.toLocaleString(),detail:'5% of $'+(j*a).toLocaleString()+'/week recovered',assumption:'Automated follow-ups recover ~5% of cold revenue',tag:'Recovered revenue'};}},
+  routing:{match:['route','routing','scheduling','efficiency','daily efficiency'],icon:'🗺',label:'Increased Capacity from Routing',calc:(c,j,a)=>{const extra=Math.max(1,Math.round(j*0.15));const s=extra*a*52;return{value:'$'+Math.round(s).toLocaleString(),detail:'~'+extra+' more jobs/week at $'+a,assumption:'Route optimization typically adds 15% more capacity',tag:'Capacity gain'};}},
+  labor:{match:['labor','recruit','retain','team','crew','scale','technician'],icon:'👥',label:'Reduced Labor Waste',calc:(c,j,a)=>{const s=Math.round(c*2.5*52*20);return{value:'$'+s.toLocaleString(),detail:'~2.5 hrs/week per person in reduced waste',assumption:'GPS and mobile scheduling reduce waste ~2.5 hrs/week at $20/hr',tag:'Labor efficiency'};}},
+  profitability:{match:['profitability','profit','costing','pricing','understand','margin'],icon:'🎯',label:'Margin Improvement from Costing',calc:(c,j,a)=>{const s=Math.round(j*a*52*0.03);return{value:'$'+s.toLocaleString(),detail:'~3% margin improvement on $'+(j*a*52).toLocaleString()+'/year',assumption:'Job costing typically improves margins 3-5%',tag:'Margin gain'};}}
+};
+
+function computeROI(){
+  const crew=parseInt(document.getElementById('inpCrew').value)||0;
+  const jobs=parseInt(document.getElementById('inpJobs').value)||0;
+  const avg=parseInt(document.getElementById('inpAvgJob').value)||0;
+  const section=document.getElementById('roiSection');
+  const sidebar=document.getElementById('roiSidebarPreview');
+  if(!crew||!jobs||!avg||!rows.length){section.style.display='none';sidebar.style.display='none';return;}
+  const goalNames=rows.map(r=>(r.goal||'').toLowerCase());
+  const matched=[];
+  for(const[key,cfg]of Object.entries(ROI_MAP)){if(cfg.match.some(kw=>goalNames.some(g=>g.includes(kw))))matched.push(key);}
+  if(!matched.includes('admin')&&rows.length>=2)matched.push('admin');
+  if(!matched.length)matched.push('admin');
+  const results=matched.map(k=>{const cfg=ROI_MAP[k];const calc=cfg.calc(crew,jobs,avg);return{...cfg,...calc,key:k};});
+  let total=0;results.forEach(r=>{if(r.isNotDollar)total+=r.dollarValue||0;else total+=parseInt(r.value.replace(/[^0-9]/g,''))||0;});
+  document.getElementById('roiSubtitle').textContent=crew+' crew × '+jobs+' jobs/week × $'+avg+' avg = $'+(jobs*avg*52).toLocaleString()+'/year';
+  document.getElementById('roiTotalNum').textContent='$'+total.toLocaleString();
+  const grid=document.getElementById('roiGrid');
+  grid.innerHTML=results.map(r=>'<div class="roi-card"><div class="rc-icon">'+r.icon+'</div><div class="rc-value '+(r.isNotDollar?'':'green')+'">'+r.value+'</div><div class="rc-label">'+r.label+'</div><div class="rc-detail">'+r.detail+'</div><div class="rc-tag">'+r.tag+'</div></div>').join('');
+  if(results.length%2!==0)grid.innerHTML+='<div class="roi-card" style="background:var(--card);"></div>';
+  document.getElementById('roiAssumptions').innerHTML='<strong>Assumptions:</strong> '+results.map(r=>r.assumption).join(' · ')+' · <em>Estimates based on industry averages.</em>';
+  section.style.display='block';sidebar.style.display='block';
+  document.getElementById('roiSidebarTotal').textContent='$'+total.toLocaleString();
+}
+
+// ═══ INIT ═══
+refreshHdr();updateBadges();loadSaved();
+
+// Warn before leaving with unsaved work
+window.addEventListener('beforeunload',e=>{if(rows.length>0){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
++annualRev.toLocaleString()+'/year revenue',M+14,y+28);
+    y+=42;
+
+    results.forEach((ri,idx)=>{
+      checkPage(48);const rowY=y,rowHt=44;
+      R(M,rowY,cW,rowHt,idx%2===0?WHITE:ROW_ALT);
+      greenCircle(M+20,rowY+rowHt/2,11,idx+1);
+      doc.setFontSize(12);doc.setTextColor(...NAVY);doc.setFont('helvetica','bold');
+      doc.text(ri.label,M+42,rowY+16);
+      doc.setFontSize(9);doc.setTextColor(...GRAY);doc.setFont('helvetica','normal');
+      doc.text(ri.detail,M+42,rowY+29);
+      doc.setFontSize(16);doc.setTextColor(...GREEN_DK);doc.setFont('helvetica','bold');
+      doc.text(ri.value,W-M-8,rowY+18,{align:'right'});
+      doc.setFontSize(8);doc.setTextColor(...GRAY_LT);doc.setFont('helvetica','normal');
+      doc.text(ri.tag,W-M-8,rowY+32,{align:'right'});
+      doc.setDrawColor(...BDR);doc.setLineWidth(0.3);doc.line(M,rowY+rowHt,M+cW,rowY+rowHt);
+      y+=rowHt;
+    });
+
+    y+=4;const summaryH=50;
+    R(M,y,cW,summaryH,NAVY);R(M,y,5,summaryH,GREEN);
+    doc.setFontSize(13);doc.setTextColor(...WHITE);doc.setFont('helvetica','bold');
+    doc.text('Estimated Annual Impact',M+18,y+20);
+    doc.setFontSize(9);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');
+    doc.text('on 
+
+// ═══ ROI ENGINE ═══
+const ROI_MAP={
+  admin:{match:['admin','automate','consolidate','transition','simplify'],icon:'⏱',label:'Time Saved on Admin',calc:(c,j,a)=>{const h=Math.min(3+Math.floor(c*0.8),12);const s=h*52*22;return{value:'$'+s.toLocaleString(),detail:'~'+h+' hrs/week × $22/hr × 52 weeks',assumption:'Admin cost $22/hr, scaling with team of '+c,tag:'Time savings'};}},
+  quotes:{match:['quote','bid','estimate','win more','revenue','increase revenue'],icon:'📈',label:'Revenue from Winning More Quotes',calc:(c,j,a)=>{const s=Math.round(j*a*0.10*52);return{value:'$'+s.toLocaleString(),detail:'10% improvement on $'+(j*a).toLocaleString()+'/week',assumption:'Professional quoting typically improves close rate ~10%',tag:'New revenue'};}},
+  cashflow:{match:['cash flow','paid faster','payment','billing','auto-billing','invoic'],icon:'💳',label:'Faster Payment Collection',calc:(c,j,a)=>{const d=14;return{value:d+' days faster',detail:'Reduces DSO by ~'+d+' days',assumption:'Shift from 30-day invoicing to same-day digital payment',tag:'Cash flow',isNotDollar:true,dollarValue:Math.round(j*a*52*(d/365)*0.08)};}},
+  followup:{match:['reputation','referral','review','cancellation','no-show','grow','acquire','client','customer'],icon:'🔄',label:'Recovered Revenue from Follow-ups',calc:(c,j,a)=>{const s=Math.round(j*a*0.05*52);return{value:'$'+s.toLocaleString(),detail:'5% of $'+(j*a).toLocaleString()+'/week recovered',assumption:'Automated follow-ups recover ~5% of cold revenue',tag:'Recovered revenue'};}},
+  routing:{match:['route','routing','scheduling','efficiency','daily efficiency'],icon:'🗺',label:'Increased Capacity from Routing',calc:(c,j,a)=>{const extra=Math.max(1,Math.round(j*0.15));const s=extra*a*52;return{value:'$'+Math.round(s).toLocaleString(),detail:'~'+extra+' more jobs/week at $'+a,assumption:'Route optimization typically adds 15% more capacity',tag:'Capacity gain'};}},
+  labor:{match:['labor','recruit','retain','team','crew','scale','technician'],icon:'👥',label:'Reduced Labor Waste',calc:(c,j,a)=>{const s=Math.round(c*2.5*52*20);return{value:'$'+s.toLocaleString(),detail:'~2.5 hrs/week per person in reduced waste',assumption:'GPS and mobile scheduling reduce waste ~2.5 hrs/week at $20/hr',tag:'Labor efficiency'};}},
+  profitability:{match:['profitability','profit','costing','pricing','understand','margin'],icon:'🎯',label:'Margin Improvement from Costing',calc:(c,j,a)=>{const s=Math.round(j*a*52*0.03);return{value:'$'+s.toLocaleString(),detail:'~3% margin improvement on $'+(j*a*52).toLocaleString()+'/year',assumption:'Job costing typically improves margins 3-5%',tag:'Margin gain'};}}
+};
+
+function computeROI(){
+  const crew=parseInt(document.getElementById('inpCrew').value)||0;
+  const jobs=parseInt(document.getElementById('inpJobs').value)||0;
+  const avg=parseInt(document.getElementById('inpAvgJob').value)||0;
+  const section=document.getElementById('roiSection');
+  const sidebar=document.getElementById('roiSidebarPreview');
+  if(!crew||!jobs||!avg||!rows.length){section.style.display='none';sidebar.style.display='none';return;}
+  const goalNames=rows.map(r=>(r.goal||'').toLowerCase());
+  const matched=[];
+  for(const[key,cfg]of Object.entries(ROI_MAP)){if(cfg.match.some(kw=>goalNames.some(g=>g.includes(kw))))matched.push(key);}
+  if(!matched.includes('admin')&&rows.length>=2)matched.push('admin');
+  if(!matched.length)matched.push('admin');
+  const results=matched.map(k=>{const cfg=ROI_MAP[k];const calc=cfg.calc(crew,jobs,avg);return{...cfg,...calc,key:k};});
+  let total=0;results.forEach(r=>{if(r.isNotDollar)total+=r.dollarValue||0;else total+=parseInt(r.value.replace(/[^0-9]/g,''))||0;});
+  document.getElementById('roiSubtitle').textContent=crew+' crew × '+jobs+' jobs/week × $'+avg+' avg = $'+(jobs*avg*52).toLocaleString()+'/year';
+  document.getElementById('roiTotalNum').textContent='$'+total.toLocaleString();
+  const grid=document.getElementById('roiGrid');
+  grid.innerHTML=results.map(r=>'<div class="roi-card"><div class="rc-icon">'+r.icon+'</div><div class="rc-value '+(r.isNotDollar?'':'green')+'">'+r.value+'</div><div class="rc-label">'+r.label+'</div><div class="rc-detail">'+r.detail+'</div><div class="rc-tag">'+r.tag+'</div></div>').join('');
+  if(results.length%2!==0)grid.innerHTML+='<div class="roi-card" style="background:var(--card);"></div>';
+  document.getElementById('roiAssumptions').innerHTML='<strong>Assumptions:</strong> '+results.map(r=>r.assumption).join(' · ')+' · <em>Estimates based on industry averages.</em>';
+  section.style.display='block';sidebar.style.display='block';
+  document.getElementById('roiSidebarTotal').textContent='$'+total.toLocaleString();
+}
+
+// ═══ INIT ═══
+refreshHdr();updateBadges();loadSaved();
+
+// Warn before leaving with unsaved work
+window.addEventListener('beforeunload',e=>{if(rows.length>0){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
++annualRev.toLocaleString()+'/year revenue',M+18,y+34);
+    doc.setFontSize(30);doc.setTextColor(168,227,0);doc.setFont('helvetica','bold');
+    doc.text('
+
+// ═══ ROI ENGINE ═══
+const ROI_MAP={
+  admin:{match:['admin','automate','consolidate','transition','simplify'],icon:'⏱',label:'Time Saved on Admin',calc:(c,j,a)=>{const h=Math.min(3+Math.floor(c*0.8),12);const s=h*52*22;return{value:'$'+s.toLocaleString(),detail:'~'+h+' hrs/week × $22/hr × 52 weeks',assumption:'Admin cost $22/hr, scaling with team of '+c,tag:'Time savings'};}},
+  quotes:{match:['quote','bid','estimate','win more','revenue','increase revenue'],icon:'📈',label:'Revenue from Winning More Quotes',calc:(c,j,a)=>{const s=Math.round(j*a*0.10*52);return{value:'$'+s.toLocaleString(),detail:'10% improvement on $'+(j*a).toLocaleString()+'/week',assumption:'Professional quoting typically improves close rate ~10%',tag:'New revenue'};}},
+  cashflow:{match:['cash flow','paid faster','payment','billing','auto-billing','invoic'],icon:'💳',label:'Faster Payment Collection',calc:(c,j,a)=>{const d=14;return{value:d+' days faster',detail:'Reduces DSO by ~'+d+' days',assumption:'Shift from 30-day invoicing to same-day digital payment',tag:'Cash flow',isNotDollar:true,dollarValue:Math.round(j*a*52*(d/365)*0.08)};}},
+  followup:{match:['reputation','referral','review','cancellation','no-show','grow','acquire','client','customer'],icon:'🔄',label:'Recovered Revenue from Follow-ups',calc:(c,j,a)=>{const s=Math.round(j*a*0.05*52);return{value:'$'+s.toLocaleString(),detail:'5% of $'+(j*a).toLocaleString()+'/week recovered',assumption:'Automated follow-ups recover ~5% of cold revenue',tag:'Recovered revenue'};}},
+  routing:{match:['route','routing','scheduling','efficiency','daily efficiency'],icon:'🗺',label:'Increased Capacity from Routing',calc:(c,j,a)=>{const extra=Math.max(1,Math.round(j*0.15));const s=extra*a*52;return{value:'$'+Math.round(s).toLocaleString(),detail:'~'+extra+' more jobs/week at $'+a,assumption:'Route optimization typically adds 15% more capacity',tag:'Capacity gain'};}},
+  labor:{match:['labor','recruit','retain','team','crew','scale','technician'],icon:'👥',label:'Reduced Labor Waste',calc:(c,j,a)=>{const s=Math.round(c*2.5*52*20);return{value:'$'+s.toLocaleString(),detail:'~2.5 hrs/week per person in reduced waste',assumption:'GPS and mobile scheduling reduce waste ~2.5 hrs/week at $20/hr',tag:'Labor efficiency'};}},
+  profitability:{match:['profitability','profit','costing','pricing','understand','margin'],icon:'🎯',label:'Margin Improvement from Costing',calc:(c,j,a)=>{const s=Math.round(j*a*52*0.03);return{value:'$'+s.toLocaleString(),detail:'~3% margin improvement on $'+(j*a*52).toLocaleString()+'/year',assumption:'Job costing typically improves margins 3-5%',tag:'Margin gain'};}}
+};
+
+function computeROI(){
+  const crew=parseInt(document.getElementById('inpCrew').value)||0;
+  const jobs=parseInt(document.getElementById('inpJobs').value)||0;
+  const avg=parseInt(document.getElementById('inpAvgJob').value)||0;
+  const section=document.getElementById('roiSection');
+  const sidebar=document.getElementById('roiSidebarPreview');
+  if(!crew||!jobs||!avg||!rows.length){section.style.display='none';sidebar.style.display='none';return;}
+  const goalNames=rows.map(r=>(r.goal||'').toLowerCase());
+  const matched=[];
+  for(const[key,cfg]of Object.entries(ROI_MAP)){if(cfg.match.some(kw=>goalNames.some(g=>g.includes(kw))))matched.push(key);}
+  if(!matched.includes('admin')&&rows.length>=2)matched.push('admin');
+  if(!matched.length)matched.push('admin');
+  const results=matched.map(k=>{const cfg=ROI_MAP[k];const calc=cfg.calc(crew,jobs,avg);return{...cfg,...calc,key:k};});
+  let total=0;results.forEach(r=>{if(r.isNotDollar)total+=r.dollarValue||0;else total+=parseInt(r.value.replace(/[^0-9]/g,''))||0;});
+  document.getElementById('roiSubtitle').textContent=crew+' crew × '+jobs+' jobs/week × $'+avg+' avg = $'+(jobs*avg*52).toLocaleString()+'/year';
+  document.getElementById('roiTotalNum').textContent='$'+total.toLocaleString();
+  const grid=document.getElementById('roiGrid');
+  grid.innerHTML=results.map(r=>'<div class="roi-card"><div class="rc-icon">'+r.icon+'</div><div class="rc-value '+(r.isNotDollar?'':'green')+'">'+r.value+'</div><div class="rc-label">'+r.label+'</div><div class="rc-detail">'+r.detail+'</div><div class="rc-tag">'+r.tag+'</div></div>').join('');
+  if(results.length%2!==0)grid.innerHTML+='<div class="roi-card" style="background:var(--card);"></div>';
+  document.getElementById('roiAssumptions').innerHTML='<strong>Assumptions:</strong> '+results.map(r=>r.assumption).join(' · ')+' · <em>Estimates based on industry averages.</em>';
+  section.style.display='block';sidebar.style.display='block';
+  document.getElementById('roiSidebarTotal').textContent='$'+total.toLocaleString();
+}
+
+// ═══ INIT ═══
+refreshHdr();updateBadges();loadSaved();
+
+// Warn before leaving with unsaved work
+window.addEventListener('beforeunload',e=>{if(rows.length>0){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
++Math.round(total).toLocaleString(),W-M-14,y+32,{align:'right'});
+    y+=summaryH+6;
+
+    doc.setFontSize(7);doc.setTextColor(...GRAY_LT);doc.setFont('helvetica','italic');
+    doc.text('* Estimates based on industry averages. Actual results may vary.',W/2,y,{align:'center'});
+  }
+
+  // ═══ FOOTER ═══
+  const footerH=36;
+  const footerY=H-footerH;
+  R(0,footerY,W,footerH,NAVY);R(0,footerY,W,2,GREEN);
+  doc.setFontSize(8);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');
+  doc.text('Jobber — Helping people in small business be successful',M,footerY+20);
+  doc.setFontSize(8);doc.setTextColor(168,227,0);doc.setFont('helvetica','normal');
+  doc.text('getjobber.com',W-M,footerY+20,{align:'right'});
+  doc.link(W-M-doc.getTextWidth('getjobber.com'),footerY+10,doc.getTextWidth('getjobber.com'),14,{url:'https://www.getjobber.com'});
+
+  const fname=(biz?biz.replace(/[^a-zA-Z0-9 ]/g,'').trim().replace(/\s+/g,'_'):'Prospect')+'_Jobber_Action_Plan.pdf';
+  doc.save(fname);
+  }catch(e){console.error('PDF export error:',e);alert('PDF export failed: '+e.message);}
 }
 
 // ═══ ROI ENGINE ═══
