@@ -8,14 +8,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script>if(!window.jspdf){var s=document.createElement('script');s.src='https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js';document.head.appendChild(s);}</script>
 <style>
-:root{--navy:#012939;--navy2:#024050;--green:#A8E300;--green-dk:#8BC000;--white:#FFFFFF;--bg:#EAECEE;--card:#F7F8FA;--bdr:#D8DCE0;--text:#14222E;--text2:#47596A;--text3:#8D9AA7;--blue:#058DC7;--blue-lt:#D6EEF8;--blue-dk:#046A99;--shadow:0 2px 16px rgba(0,0,0,0.08);--sidebar-w:300px;}
+:root{--navy:#012939;--navy2:#024050;--green:#A8E300;--green-dk:#8BC000;--white:#FFFFFF;--bg:#EAECEE;--card:#F7F8FA;--bdr:#D8DCE0;--text:#14222E;--text2:#47596A;--text3:#8D9AA7;--blue:#058DC7;--blue-lt:#D6EEF8;--blue-dk:#046A99;--shadow:0 2px 16px rgba(0,0,0,0.08);--sidebar-w:300px;--red:#E74C3C;--red-lt:#FDEDEC;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+
+/* SIDEBAR */
 .edit-bar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--navy);overflow-y:auto;z-index:50;display:flex;flex-direction:column;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent;}
 .edit-bar::-webkit-scrollbar{width:5px;}.edit-bar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:3px;}
 .eb-header{padding:20px 22px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;position:sticky;top:0;background:var(--navy);z-index:2;}
-.eb-mark{width:28px;height:28px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:900;font-size:14px;color:var(--navy);flex-shrink:0;}
+.eb-mark{width:28px;height:28px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:900;font-size:14px;color:var(--navy);}
 .eb-title{font-family:'Poppins',sans-serif;font-weight:700;font-size:13px;color:var(--white);}
+
+/* TABS in sidebar */
+.eb-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
+.eb-tab{flex:1;padding:12px 10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.35);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;}
+.eb-tab:hover{color:rgba(255,255,255,0.6);}
+.eb-tab.active{color:var(--green);border-bottom-color:var(--green);background:rgba(168,227,0,0.04);}
+.tab-content{display:none;flex:1;overflow-y:auto;}
+.tab-content.active{display:flex;flex-direction:column;}
+
 .eb-section{border-bottom:1px solid rgba(255,255,255,0.06);}
 .eb-section-head{padding:14px 22px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
 .eb-section-head:hover{background:rgba(255,255,255,0.03);}
@@ -24,8 +35,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .eb-section.collapsed .eb-section-chevron{transform:rotate(-90deg);}
 .eb-section.collapsed .eb-section-body{display:none;}
 .eb-section-body{padding:0 22px 16px;}
-.eb-section-body .eb-field{margin-bottom:12px;}
-.eb-section-body .eb-field:last-child{margin-bottom:0;}
+.eb-section-body .eb-field{margin-bottom:12px;}.eb-section-body .eb-field:last-child{margin-bottom:0;}
 .eb-section-badge{font-size:9px;font-weight:600;background:rgba(168,227,0,0.15);color:var(--green);padding:2px 8px;border-radius:10px;margin-left:auto;margin-right:8px;white-space:nowrap;}
 .eb-field{display:flex;flex-direction:column;gap:4px;}
 .eb-field label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);}
@@ -38,26 +48,39 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .eb-field textarea::placeholder{color:rgba(255,255,255,0.25);}
 .btn-add{background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);padding:10px 16px;border-radius:7px;font-family:'Inter',sans-serif;font-weight:600;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:6px;}
 .btn-add:hover{border-color:var(--green);color:var(--green);}
-.eb-export-footer{margin-top:auto;padding:16px 22px 20px;border-top:1px solid rgba(255,255,255,0.08);background:var(--navy);position:sticky;bottom:0;flex-shrink:0;display:flex;flex-direction:column;gap:8px;}
+.eb-export-footer{padding:16px 22px 20px;border-top:1px solid rgba(255,255,255,0.08);background:var(--navy);position:sticky;bottom:0;flex-shrink:0;display:flex;flex-direction:column;gap:8px;}
 .btn{padding:10px 16px;border-radius:7px;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:12px;cursor:pointer;text-align:center;}
 .btn-green{background:var(--green);color:var(--navy);}.btn-green:hover{background:var(--green-dk);}
 .btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);}.btn-outline:hover{border-color:var(--white);color:var(--white);}
 .eb-autosave{font-size:9px;color:rgba(255,255,255,0.25);text-align:center;}
+
+/* ROI sidebar inputs */
+.roi-q{padding:14px 22px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.roi-q-label{font-size:12px;font-weight:600;color:var(--white);margin-bottom:3px;line-height:1.4;}
+.roi-q-hint{font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;line-height:1.4;}
+.roi-q input{width:100%;padding:10px 12px;border:1.5px solid rgba(255,255,255,0.12);border-radius:7px;background:rgba(255,255,255,0.05);color:var(--white);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;}
+.roi-q input:focus{outline:none;border-color:var(--green);}
+.roi-q input::placeholder{color:rgba(255,255,255,0.2);font-weight:400;}
+.roi-q select{width:100%;padding:10px 12px;border:1.5px solid rgba(255,255,255,0.12);border-radius:7px;background:rgba(255,255,255,0.05);color:var(--white);font-family:'Inter',sans-serif;font-size:13px;}
+.roi-q select option{color:var(--text);background:var(--white);}
+.roi-empty{padding:40px 22px;text-align:center;color:rgba(255,255,255,0.3);font-size:12px;line-height:1.6;}
+
+/* DOCUMENT AREA */
 .doc-area{margin-left:var(--sidebar-w);padding:32px;display:flex;justify-content:center;}
 .doc-page{width:960px;background:var(--white);border-radius:4px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
 .doc-page::before{content:'';display:block;height:6px;background:linear-gradient(90deg,var(--navy) 0%,var(--navy) 60%,var(--green) 60%,var(--green) 100%);}
 .doc-hdr{padding:36px 48px 28px;display:flex;justify-content:space-between;align-items:flex-start;}
 .doc-hdr-left{flex:1;}.doc-hdr-right{text-align:right;flex-shrink:0;}
-.doc-hdr .dh-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px;}
-.doc-hdr .dh-mark{width:28px;height:28px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:900;font-size:14px;color:var(--navy);}
-.doc-hdr .dh-brand{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;color:var(--navy);}
-.doc-hdr .dh-title{font-family:'Poppins',sans-serif;font-weight:900;font-size:26px;color:var(--navy);line-height:1.15;}
-.doc-hdr .dh-sub{font-size:13px;color:var(--text2);margin-top:5px;max-width:500px;line-height:1.5;}
-.doc-hdr-right .dr-item{margin-bottom:8px;}
-.doc-hdr-right .dr-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
-.doc-hdr-right .dr-val{font-size:13px;font-weight:600;color:var(--navy);}
+.dh-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px;}
+.dh-mark{width:28px;height:28px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:900;font-size:14px;color:var(--navy);}
+.dh-brand{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;color:var(--navy);}
+.dh-title{font-family:'Poppins',sans-serif;font-weight:900;font-size:26px;color:var(--navy);line-height:1.15;}
+.dh-sub{font-size:13px;color:var(--text2);margin-top:5px;max-width:500px;line-height:1.5;}
+.dr-item{margin-bottom:8px;}.dr-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}.dr-val{font-size:13px;font-weight:600;color:var(--navy);}
 .doc-hdr-divider{margin:0 48px;height:2px;background:var(--navy);}
 .doc-note{padding:20px 48px 0;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic;}.doc-note:empty{display:none;}
+
+/* CHART */
 .doc-chart{padding:20px 48px 32px;}
 .dc-heads{display:grid;grid-template-columns:24% 29% 27% 20%;border-bottom:2.5px solid var(--navy);}
 .dc-h{padding:10px 14px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;}
@@ -72,55 +95,66 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .row-actions .ra-btn{width:22px;height:22px;border-radius:4px;border:none;background:rgba(0,0,0,0.04);color:var(--text3);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .row-actions .ra-btn:hover{background:#FDD;color:#B00;}
 .row-actions .ra-btn.ra-up:hover,.row-actions .ra-btn.ra-down:hover{background:var(--blue-lt);color:var(--blue);}
-.dc-row .cell-g{padding:18px 14px 40px;position:relative;border-right:1px solid var(--bdr);}
+.cell-g{padding:18px 14px 40px;position:relative;border-right:1px solid var(--bdr);}
 .dc-row:nth-child(even) .cell-g{background:var(--blue-lt);}
 .cell-g .cg-edit{width:100%;border:none;border-bottom:1px dashed var(--bdr);font-family:'Inter',sans-serif;font-weight:800;font-size:15px;color:var(--navy);padding:0 0 2px;background:transparent;outline:none;}
 .cell-g .cg-edit:focus{border-bottom-color:var(--green);}
 .cell-g .cg-text{font-weight:800;font-size:15px;color:var(--navy);line-height:1.35;}
-.cell-g .cg-label{font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-top:10px;margin-bottom:2px;}
+.cell-g .cg-label{font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;margin-top:10px;margin-bottom:2px;}
 .cell-g .cg-input{width:100%;border:none;border-bottom:1px dashed var(--bdr);font-family:'Inter',sans-serif;font-size:11px;color:var(--text2);padding:2px 0;background:transparent;outline:none;}
-.cell-g .cg-input:focus{border-bottom-color:var(--green);}
-.cell-g .cg-input::placeholder{color:var(--text3);}
+.cell-g .cg-input:focus{border-bottom-color:var(--green);}.cell-g .cg-input::placeholder{color:var(--text3);}
 .cell-g .cg-num{position:absolute;bottom:4px;right:12px;font-family:'Poppins',sans-serif;font-weight:900;font-size:40px;line-height:1;color:rgba(1,41,57,0.07);}
-.dc-row .cell-f{padding:18px 16px;color:var(--white);}
+.cell-f{padding:18px 16px;color:var(--white);}
 .dc-row:nth-child(odd) .cell-f{background:var(--navy);}.dc-row:nth-child(even) .cell-f{background:var(--blue);}
 .cell-f ul{list-style:none;}.cell-f ul li{padding:3px 0;font-size:12.5px;line-height:1.4;display:flex;flex-direction:column;gap:2px;}
 .cell-f a{color:var(--white);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.45);}
-.cell-f li .f-wrap{display:flex;align-items:center;gap:4px;}.cell-f li .f-wrap::before{content:'•';color:rgba(255,255,255,0.4);}
-.cell-f li .print-only::before{content:'• ';color:rgba(255,255,255,0.4);}
+.cell-f li .f-wrap{display:flex;align-items:center;gap:4px;}.cell-f li .f-wrap::before{content:'*';color:rgba(255,255,255,0.4);}
+.cell-f li .print-only::before{content:'* ';color:rgba(255,255,255,0.4);}
 .cell-f li .f-rm{width:14px;height:14px;border-radius:50%;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .cell-f li .f-rm:hover{background:rgba(255,80,80,0.5);color:#fff;}
 .cell-f .f-edit{width:100%;border:none;border-bottom:1px dashed rgba(255,255,255,0.2);background:transparent;color:var(--white);font-family:'Inter',sans-serif;font-size:12px;padding:2px 0;outline:none;}
 .cell-f .f-edit:focus{border-bottom-color:var(--green);}
 .cell-f .f-link{width:100%;border:none;border-bottom:1px dashed rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.5);font-family:'Inter',sans-serif;font-size:10px;padding:2px 0;outline:none;}
-.cell-f .f-add{margin-top:6px;padding:4px 8px;border:1px dashed rgba(255,255,255,0.2);border-radius:4px;background:transparent;color:rgba(255,255,255,0.4);font-family:'Inter',sans-serif;font-size:10px;cursor:pointer;width:100%;text-align:center;}
+.cell-f .f-add{margin-top:6px;padding:4px 8px;border:1px dashed rgba(255,255,255,0.2);border-radius:4px;background:transparent;color:rgba(255,255,255,0.4);font-size:10px;cursor:pointer;width:100%;text-align:center;}
 .cell-f .f-add:hover{border-color:var(--green);color:var(--green);}
-.dc-row .cell-i{padding:18px 14px;font-size:12px;color:var(--text2);line-height:1.55;border-right:1px solid var(--bdr);}
+.cell-i{padding:18px 14px;font-size:12px;color:var(--text2);line-height:1.55;border-right:1px solid var(--bdr);}
 .cell-i .ci-edit{width:100%;border:none;background:transparent;font-family:'Inter',sans-serif;font-size:12px;color:var(--text2);line-height:1.55;resize:vertical;min-height:60px;outline:none;border-bottom:1px dashed var(--bdr);}
 .cell-i .ci-edit:focus{border-bottom-color:var(--green);}
-.dc-row .cell-n{padding:18px 14px;background:var(--card);}
+.cell-n{padding:18px 14px;background:var(--card);}
 .cell-n .cn-input{width:100%;border:none;border-bottom:1.5px solid var(--bdr);font-family:'Inter',sans-serif;font-size:12px;color:var(--text);padding:3px 0;background:transparent;outline:none;}
-.cell-n .cn-input:focus{border-bottom-color:var(--green);}
-.cell-n .cn-input::placeholder{color:var(--text3);}
-.roi-section{padding:0 48px 32px;}
-.roi-header{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 24px;background:var(--navy);border-radius:8px 8px 0 0;color:var(--white);}
-.roi-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;}
-.roi-subtitle{font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;}
-.roi-total-box{text-align:right;}
-.roi-total-label{font-size:9px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.4);}
-.roi-total-num{font-family:'Poppins',sans-serif;font-weight:900;font-size:32px;color:var(--green);line-height:1.1;}
-.roi-total-sub{font-size:10px;color:rgba(255,255,255,0.4);}
-.roi-grid{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--bdr);border-top:none;overflow:hidden;}
-.roi-card{padding:18px 20px;background:var(--white);border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr);}
-.roi-card:nth-child(2n){border-right:none;}.roi-card:nth-last-child(-n+2){border-bottom:none;}
-.roi-card .rc-icon{font-size:18px;margin-bottom:6px;}
-.roi-card .rc-value{font-family:'Poppins',sans-serif;font-weight:800;font-size:22px;color:var(--navy);line-height:1.1;}
-.roi-card .rc-value.green{color:var(--green-dk);}
-.roi-card .rc-label{font-size:11px;font-weight:700;color:var(--text2);margin-top:2px;}
-.roi-card .rc-detail{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.4;}
-.roi-card .rc-tag{display:inline-block;font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;background:var(--blue-lt);color:var(--blue);margin-top:6px;text-transform:uppercase;}
-.roi-assumptions{padding:12px 20px;background:var(--card);border:1.5px solid var(--bdr);border-top:none;border-radius:0 0 8px 8px;font-size:9px;color:var(--text3);line-height:1.5;}
-.roi-assumptions strong{color:var(--text2);}
+.cell-n .cn-input:focus{border-bottom-color:var(--green);}.cell-n .cn-input::placeholder{color:var(--text3);}
+
+/* ROI DOCUMENT SECTION */
+.roi-doc{padding:0 48px 32px;}
+.roi-doc-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:2.5px solid var(--navy);margin-bottom:0;}
+.roi-summary-bar{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;background:var(--navy);border-radius:8px 8px 0 0;color:var(--white);margin-top:16px;}
+.roi-summary-bar .rs-label{font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;}
+.roi-summary-bar .rs-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;}
+.roi-summary-bar .rs-total{text-align:right;}
+.roi-summary-bar .rs-num{font-family:'Poppins',sans-serif;font-weight:900;font-size:32px;color:var(--green);line-height:1.1;}
+.roi-summary-bar .rs-per{font-size:10px;color:rgba(255,255,255,0.4);}
+
+.roi-compare{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--bdr);border-top:none;}
+.roi-col-head{padding:12px 16px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--bdr);}
+.roi-col-head.today{background:var(--red-lt);color:var(--red);border-right:1px solid var(--bdr);}
+.roi-col-head.jobber{background:rgba(168,227,0,0.08);color:var(--green-dk);}
+.roi-compare-row{display:contents;}
+.roi-cell{padding:14px 16px;border-bottom:1px solid var(--bdr);font-size:13px;}
+.roi-cell.today{border-right:1px solid var(--bdr);background:var(--white);}
+.roi-cell.jobber{background:var(--card);}
+.roi-cell .rc-cat{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+.roi-cell .rc-val{font-family:'Poppins',sans-serif;font-weight:800;font-size:18px;color:var(--navy);}
+.roi-cell.jobber .rc-val{color:var(--green-dk);}
+.roi-cell .rc-detail{font-size:10px;color:var(--text3);margin-top:2px;}
+.roi-cell .rc-delta{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-top:4px;}
+.roi-cell .rc-delta.save{background:rgba(168,227,0,0.12);color:var(--green-dk);}
+.roi-cell .rc-delta.loss{background:var(--red-lt);color:var(--red);}
+.roi-payback{padding:16px 20px;background:var(--card);border:1.5px solid var(--bdr);border-top:none;border-radius:0 0 8px 8px;font-size:11px;color:var(--text2);line-height:1.5;}
+.roi-payback strong{color:var(--navy);}
+
+.roi-empty-doc{text-align:center;padding:48px 20px;color:var(--text3);font-size:13px;line-height:1.6;}
+
+/* NEXT STEPS */
 .next-section{padding:0 48px 32px;}
 .ns-title{font-family:'Poppins',sans-serif;font-weight:800;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;padding-bottom:10px;border-bottom:2.5px solid var(--navy);}
 .ns-row{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-bottom:1px solid var(--bdr);position:relative;}
@@ -136,6 +170,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .ns-add:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt);}
 .doc-foot{padding:18px 48px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bdr);font-size:10px;color:var(--text3);}
 .doc-foot strong{color:var(--navy);}
+
+/* PICKER */
 .overlay{display:none;position:fixed;inset:0;background:rgba(1,41,57,0.55);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
 .overlay.open{display:flex;}
 .picker{background:var(--white);border-radius:16px;max-width:640px;width:94%;max-height:82vh;box-shadow:0 24px 80px rgba(0,0,0,0.25);display:flex;flex-direction:column;overflow:hidden;}
@@ -150,7 +186,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .pk-item.on{border-color:var(--navy);background:var(--navy);color:var(--white);}
 .pk-item .ck{width:20px;height:20px;border-radius:5px;border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
 .pk-item.on .ck{border-color:var(--green);background:var(--green);color:var(--navy);}
-.pk-item-content{flex:1;min-width:0;}.pk-item-name{font-size:13px;font-weight:600;}
+.pk-item-content{flex:1;}.pk-item-name{font-size:13px;font-weight:600;}
 .pk-item-preview{font-size:11px;color:var(--text3);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .pk-item.on .pk-item-preview{color:rgba(255,255,255,0.5);}
 .pk-item-features{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
@@ -161,99 +197,416 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webk
 .pk-foot-btns{display:flex;gap:8px;}
 .btn-nv{background:var(--navy);color:var(--white);}.btn-nv:hover{background:var(--navy2);}
 .btn-x{background:var(--card);color:var(--text);}.btn-x:hover{background:var(--bdr);}
-.val-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#B00;color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:none;}
+.val-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#B00;color:white;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;display:none;}
 body.exporting .edit-bar,body.exporting .row-actions,body.exporting .drag-handle,body.exporting .overlay,body.exporting .no-print,body.exporting .val-toast{display:none!important;}
 body.exporting .print-only{display:inline!important;}body.exporting .doc-area{margin-left:0;padding:20px;}body.exporting .doc-page{width:1100px;box-shadow:none;}body.exporting{background:white;}
 body.exporting .cell-g .cg-edit,body.exporting .cell-g .cg-label,body.exporting .cell-g .cg-input{display:none!important;}body.exporting .cell-g .cg-text{display:block!important;}
 body.exporting .cell-i .ci-edit{display:none!important;}body.exporting .cell-i .print-only{display:block!important;}
 body.exporting .cell-f .f-wrap,body.exporting .cell-f .f-link,body.exporting .cell-f .f-add{display:none!important;}body.exporting .cell-f li .print-only{display:inline!important;}
-body.exporting .cell-n .cn-input{border-bottom-color:transparent;border-style:none;}body.exporting .ns-input{border-bottom-color:transparent!important;border-style:none!important;}body.exporting .ns-add,body.exporting .ns-rm{display:none!important;}
+body.exporting .cell-n .cn-input{border-style:none;}body.exporting .ns-input{border-style:none!important;}body.exporting .ns-add,body.exporting .ns-rm{display:none!important;}
 @media(max-width:1300px){:root{--sidebar-w:260px;}.doc-page{width:100%;}}
 @media(max-width:1080px){:root{--sidebar-w:240px;}.dc-heads,.dc-row{grid-template-columns:22% 28% 28% 22%;}}
 </style>
 </head>
 <body>
 <div class="val-toast" id="valToast"></div>
+
 <div class="edit-bar no-print">
   <div class="eb-header"><div class="eb-mark">J</div><div class="eb-title">Action Plan Builder</div></div>
-  <div class="eb-section" id="secProspect"><div class="eb-section-head" onclick="toggleSection('secProspect')"><div class="eb-section-label">👤 Prospect Details</div><span class="eb-section-badge" id="badgeProspect" style="display:none"></span><span class="eb-section-chevron">▼</span></div><div class="eb-section-body">
-    <div class="eb-field"><label>Industry</label><select id="selInd" onchange="changeInd()"><option value="">Select...</option><option value="landscaping">Landscaping</option><option value="lawncare">Lawn Care</option><option value="cleaning">Residential Cleaning</option><option value="hvac">HVAC</option><option value="plumbing">Plumbing</option><option value="electrical">Electrical</option><option value="construction">Construction</option><option value="treecare">Tree Care</option><option value="pestcontrol">Pest Control</option><option value="pressurewashing">Pressure Washing</option><option value="roofing">Roofing</option><option value="painting">Painting</option><option value="handyman">Handyman</option><option value="poolspa">Pool &amp; Spa</option><option value="snowremoval">Snow Removal</option><option value="junkremoval">Junk Removal</option><option value="windowwashing">Window Washing</option><option value="renovations">Renovations</option><option value="other">Other</option></select></div>
-    <div class="eb-field"><label>Business Name</label><input type="text" id="inpBiz" placeholder="e.g. Smith's Landscaping" oninput="refreshHdr();updateBadges();autoSave()"></div>
-    <div class="eb-field"><label>Contact Name</label><input type="text" id="inpCon" placeholder="e.g. John Smith" oninput="refreshHdr();autoSave()"></div>
-    <div class="eb-field"><label>Date</label><input type="text" id="inpDate" placeholder="e.g. April 7, 2026" oninput="refreshHdr();autoSave()"></div>
-    <div class="eb-field"><label>Team Size</label><select id="selTeam" onchange="refreshHdr();autoSave()"><option value="">Select...</option><option value="1">Solo (1)</option><option value="3">Small (2-5)</option><option value="8">Medium (6-10)</option><option value="15">Large (11-20)</option><option value="30">Enterprise (20+)</option></select></div>
-  </div></div>
-  <div class="eb-section" id="secNote"><div class="eb-section-head" onclick="toggleSection('secNote')"><div class="eb-section-label">💬 Personal Note</div><span class="eb-section-badge" id="badgeNote" style="display:none"></span><span class="eb-section-chevron">▼</span></div><div class="eb-section-body"><div class="eb-field"><textarea id="inpNote" placeholder="e.g. After our conversation about scaling..." oninput="refreshNote();autoSave()"></textarea></div></div></div>
-  <div class="eb-section" id="secBuild"><div class="eb-section-head" onclick="toggleSection('secBuild')"><div class="eb-section-label">📋 Build Plan</div><span class="eb-section-badge" id="badgeBuild" style="display:none"></span><span class="eb-section-chevron">▼</span></div><div class="eb-section-body"><button class="btn-add" onclick="openPk()">+ Add Goal Row</button><button class="btn-add" onclick="addStep()">+ Add Next Step</button><div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;">Drag rows to reorder. Hover for controls.</div></div></div>
-  <div class="eb-section collapsed" id="secROI"><div class="eb-section-head" onclick="toggleSection('secROI')"><div class="eb-section-label">📊 ROI Calculator</div><span class="eb-section-badge" id="badgeROI">optional</span><span class="eb-section-chevron">▼</span></div><div class="eb-section-body">
-    <div class="eb-field"><label>Crew Size</label><input type="number" id="inpCrew" placeholder="e.g. 2" oninput="computeROI();autoSave()"></div>
-    <div class="eb-field"><label>Jobs/Week</label><input type="number" id="inpJobs" placeholder="e.g. 8" oninput="computeROI();autoSave()"></div>
-    <div class="eb-field"><label>Avg Job ($)</label><input type="number" id="inpAvgJob" placeholder="e.g. 150" oninput="computeROI();autoSave()"></div>
-    <div id="roiSidebarPreview" style="margin-top:8px;padding:10px 12px;border-radius:7px;background:rgba(168,227,0,0.08);display:none"><div style="font-size:10px;font-weight:700;color:var(--green)">LIVE PREVIEW</div><div id="roiSidebarTotal" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:20px;color:var(--green)"></div><div style="font-size:9px;color:rgba(255,255,255,0.4)">estimated annual impact</div></div>
-  </div></div>
+  <div class="eb-tabs">
+    <div class="eb-tab active" onclick="switchTab('plan')">Action Plan</div>
+    <div class="eb-tab" onclick="switchTab('roi')">ROI Calculator</div>
+  </div>
+
+  <!-- TAB 1: ACTION PLAN -->
+  <div class="tab-content active" id="tabPlan">
+    <div class="eb-section" id="secProspect"><div class="eb-section-head" onclick="toggleSection('secProspect')"><div class="eb-section-label">Prospect Details</div><span class="eb-section-badge" id="badgeProspect" style="display:none"></span><span class="eb-section-chevron">V</span></div><div class="eb-section-body">
+      <div class="eb-field"><label>Industry</label><select id="selInd" onchange="changeInd()"><option value="">Select...</option><option value="landscaping">Landscaping</option><option value="lawncare">Lawn Care</option><option value="cleaning">Residential Cleaning</option><option value="hvac">HVAC</option><option value="plumbing">Plumbing</option><option value="electrical">Electrical</option><option value="construction">Construction</option><option value="treecare">Tree Care</option><option value="pestcontrol">Pest Control</option><option value="pressurewashing">Pressure Washing</option><option value="roofing">Roofing</option><option value="painting">Painting</option><option value="handyman">Handyman</option><option value="poolspa">Pool &amp; Spa</option><option value="snowremoval">Snow Removal</option><option value="junkremoval">Junk Removal</option><option value="windowwashing">Window Washing</option><option value="renovations">Renovations</option><option value="other">Other</option></select></div>
+      <div class="eb-field"><label>Business Name</label><input type="text" id="inpBiz" placeholder="e.g. Smith's Landscaping" oninput="refreshHdr();updateBadges();autoSave()"></div>
+      <div class="eb-field"><label>Contact Name</label><input type="text" id="inpCon" placeholder="e.g. John Smith" oninput="refreshHdr();autoSave()"></div>
+      <div class="eb-field"><label>Date</label><input type="text" id="inpDate" placeholder="e.g. April 7, 2026" oninput="refreshHdr();autoSave()"></div>
+      <div class="eb-field"><label>Team Size</label><select id="selTeam" onchange="refreshHdr();autoSave()"><option value="">Select...</option><option value="1">Solo (1)</option><option value="3">Small (2-5)</option><option value="8">Medium (6-10)</option><option value="15">Large (11-20)</option><option value="30">Enterprise (20+)</option></select></div>
+    </div></div>
+    <div class="eb-section" id="secNote"><div class="eb-section-head" onclick="toggleSection('secNote')"><div class="eb-section-label">Personal Note</div><span class="eb-section-badge" id="badgeNote" style="display:none"></span><span class="eb-section-chevron">V</span></div><div class="eb-section-body"><div class="eb-field"><textarea id="inpNote" placeholder="e.g. After our conversation about scaling..." oninput="refreshNote();autoSave()"></textarea></div></div></div>
+    <div class="eb-section" id="secBuild"><div class="eb-section-head" onclick="toggleSection('secBuild')"><div class="eb-section-label">Build Plan</div><span class="eb-section-badge" id="badgeBuild" style="display:none"></span><span class="eb-section-chevron">V</span></div><div class="eb-section-body"><button class="btn-add" onclick="openPk()">+ Add Goal Row</button><button class="btn-add" onclick="addStep()">+ Add Next Step</button></div></div>
+  </div>
+
+  <!-- TAB 2: ROI CALCULATOR -->
+  <div class="tab-content" id="tabROI">
+    <div id="roiQuestions"></div>
+  </div>
+
   <div class="eb-export-footer"><button class="btn btn-green" id="btnExportPDF" onclick="doExport()">Download PDF</button><button class="btn btn-outline" onclick="resetAll()">Reset</button><div class="eb-autosave" id="autosaveStatus"></div></div>
 </div>
-<div class="overlay" id="ov"><div class="picker"><div class="pk-header"><h3>Select Business Goals</h3><p class="pk-sub" id="pkSub">Choose goals for this prospect</p><input type="text" class="pk-search" id="pkSearch" placeholder="Search goals..." oninput="filterPicker()"></div><div class="pk-scroll" id="pkList"></div><div class="pk-foot"><div class="pk-count"><strong id="pkSelCount">0</strong> selected</div><div class="pk-foot-btns"><button class="btn btn-x" onclick="closePk()">Cancel</button><button class="btn btn-nv" onclick="confirmPk()">Add Selected</button></div></div></div></div>
+
+<!-- PICKER -->
+<div class="overlay" id="ov"><div class="picker"><div class="pk-header"><h3>Select Business Goals</h3><p class="pk-sub" id="pkSub">Choose goals</p><input type="text" class="pk-search" id="pkSearch" placeholder="Search goals..." oninput="filterPicker()"></div><div class="pk-scroll" id="pkList"></div><div class="pk-foot"><div class="pk-count"><strong id="pkSelCount">0</strong> selected</div><div class="pk-foot-btns"><button class="btn btn-x" onclick="closePk()">Cancel</button><button class="btn btn-nv" onclick="confirmPk()">Add Selected</button></div></div></div></div>
+
+<!-- DOCUMENT -->
 <div class="doc-area"><div class="doc-page">
-  <div class="doc-hdr"><div class="doc-hdr-left"><div class="dh-logo"><div class="dh-mark">J</div><span class="dh-brand">Jobber</span></div><div class="dh-title" id="hTitle">Custom Action Plan</div><div class="dh-sub" id="hSub">Your tailored roadmap to streamline operations and grow your business with Jobber</div></div><div class="doc-hdr-right"><div class="dr-item"><div class="dr-label">Industry</div><div class="dr-val" id="mInd">—</div></div><div class="dr-item"><div class="dr-label">Contact</div><div class="dr-val" id="mCon">—</div></div><div class="dr-item"><div class="dr-label">Team Size</div><div class="dr-val" id="mTeam">—</div></div><div class="dr-item"><div class="dr-label">Date</div><div class="dr-val" id="mDate">—</div></div></div></div>
-  <div class="doc-hdr-divider"></div><div class="doc-note" id="docNote"></div>
+  <div class="doc-hdr"><div class="doc-hdr-left"><div class="dh-logo"><div class="dh-mark">J</div><span class="dh-brand">Jobber</span></div><div class="dh-title" id="hTitle">Custom Action Plan</div><div class="dh-sub" id="hSub">Your tailored roadmap to streamline operations and grow your business with Jobber</div></div><div class="doc-hdr-right"><div class="dr-item"><div class="dr-label">Industry</div><div class="dr-val" id="mInd">--</div></div><div class="dr-item"><div class="dr-label">Contact</div><div class="dr-val" id="mCon">--</div></div><div class="dr-item"><div class="dr-label">Team Size</div><div class="dr-val" id="mTeam">--</div></div><div class="dr-item"><div class="dr-label">Date</div><div class="dr-val" id="mDate">--</div></div></div></div>
+  <div class="doc-hdr-divider"></div>
+  <div class="doc-note" id="docNote"></div>
   <div class="doc-chart"><div class="dc-heads"><div class="dc-h h1">Business Goals</div><div class="dc-h h2">Jobber Features</div><div class="dc-h h3">Impact</div><div class="dc-h h4">Notes</div></div><div id="chartBody"><div style="text-align:center;padding:48px 20px;color:var(--text3)">Select an industry, then click "+ Add Goal Row"</div></div></div>
-  <div class="roi-section" id="roiSection" style="display:none"><div class="roi-header"><div><div class="roi-title">Estimated Annual Impact</div><div class="roi-subtitle" id="roiSubtitle"></div></div><div class="roi-total-box"><div class="roi-total-label">Total Value</div><div class="roi-total-num" id="roiTotalNum">$0</div><div class="roi-total-sub">per year</div></div></div><div class="roi-grid" id="roiGrid"></div><div class="roi-assumptions" id="roiAssumptions"></div></div>
-  <div class="next-section"><div class="ns-title">Next Steps</div><div id="stepsBody"><div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Add next steps using the sidebar</div></div><button class="ns-add no-print" onclick="addStep()">+ Add Next Step</button></div>
-  <div class="doc-foot"><div><strong>Jobber</strong> — Helping people in small business be successful</div><div>getjobber.com</div></div>
+
+  <!-- ROI comparison section on document -->
+  <div class="roi-doc" id="roiDoc" style="display:none">
+    <div class="roi-doc-title">Return on Investment Analysis</div>
+    <div class="roi-summary-bar"><div><div class="rs-label">Your Estimated Annual Impact</div><div class="rs-sub" id="roiDocSub"></div></div><div class="rs-total"><div class="rs-num" id="roiDocTotal">$0</div><div class="rs-per">per year</div></div></div>
+    <div class="roi-compare" id="roiCompare">
+      <div class="roi-col-head today">Today (Without Jobber)</div>
+      <div class="roi-col-head jobber">With Jobber</div>
+    </div>
+    <div class="roi-payback" id="roiPayback"></div>
+  </div>
+
+  <div class="next-section"><div class="ns-title">Next Steps</div><div id="stepsBody"><div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Add next steps</div></div><button class="ns-add no-print" onclick="addStep()">+ Add Next Step</button></div>
+  <div class="doc-foot"><div><strong>Jobber</strong> -- Helping people in small business be successful</div><div>getjobber.com</div></div>
 </div></div>
 
 <script>
-var LINKS={"quoting":"https://www.getjobber.com/features/quotes/","quote":"https://www.getjobber.com/features/quotes/","scheduling":"https://www.getjobber.com/features/scheduling/","calendar":"https://www.getjobber.com/features/scheduling/","recurring":"https://www.getjobber.com/features/scheduling/","invoic":"https://www.getjobber.com/features/field-service-invoicing-software/","payment":"https://www.getjobber.com/features/field-service-credit-card-processing/","billing":"https://www.getjobber.com/features/field-service-credit-card-processing/","client hub":"https://www.getjobber.com/features/client-hub/","crm":"https://www.getjobber.com/features/field-service-crm/","route":"https://www.getjobber.com/features/scheduling/","mobile app":"https://www.getjobber.com/features/field-service-management-app/","job costing":"https://www.getjobber.com/features/job-costing-software/","time tracking":"https://www.getjobber.com/features/automatic-time-tracking-software/","gps":"https://www.getjobber.com/features/gps-tracking-app/","online booking":"https://www.getjobber.com/features/online-booking/","booking":"https://www.getjobber.com/features/online-booking/","automation":"https://www.getjobber.com/features/automate-repetitive-tasks/","automated":"https://www.getjobber.com/features/automate-repetitive-tasks/","reminder":"https://www.getjobber.com/features/automate-repetitive-tasks/","texting":"https://www.getjobber.com/features/simplify-customer-communications/","reporting":"https://www.getjobber.com/features/field-service-reporting/","insights":"https://www.getjobber.com/features/field-service-reporting/","quickbooks":"https://www.getjobber.com/features/quickbooks-sync/","website":"https://www.getjobber.com/features/marketing-tools/website/","review":"https://www.getjobber.com/features/marketing-tools/reviews/","referral":"https://www.getjobber.com/features/marketing-tools/referrals/","marketing":"https://www.getjobber.com/features/marketing-suite/","photo":"https://www.getjobber.com/features/field-service-management-app/","checklist":"https://www.getjobber.com/features/quote-request-form/","expense":"https://www.getjobber.com/features/job-costing-software/","before/after":"https://www.getjobber.com/features/field-service-management-app/"};
+var LINKS={"quoting":"https://www.getjobber.com/features/quotes/","quote":"https://www.getjobber.com/features/quotes/","scheduling":"https://www.getjobber.com/features/scheduling/","calendar":"https://www.getjobber.com/features/scheduling/","recurring":"https://www.getjobber.com/features/scheduling/","invoic":"https://www.getjobber.com/features/field-service-invoicing-software/","payment":"https://www.getjobber.com/features/field-service-credit-card-processing/","billing":"https://www.getjobber.com/features/field-service-credit-card-processing/","client hub":"https://www.getjobber.com/features/client-hub/","crm":"https://www.getjobber.com/features/field-service-crm/","route":"https://www.getjobber.com/features/scheduling/","mobile app":"https://www.getjobber.com/features/field-service-management-app/","job costing":"https://www.getjobber.com/features/job-costing-software/","time tracking":"https://www.getjobber.com/features/automatic-time-tracking-software/","gps":"https://www.getjobber.com/features/gps-tracking-app/","online booking":"https://www.getjobber.com/features/online-booking/","booking":"https://www.getjobber.com/features/online-booking/","automation":"https://www.getjobber.com/features/automate-repetitive-tasks/","automated":"https://www.getjobber.com/features/automate-repetitive-tasks/","reminder":"https://www.getjobber.com/features/automate-repetitive-tasks/","texting":"https://www.getjobber.com/features/simplify-customer-communications/","reporting":"https://www.getjobber.com/features/field-service-reporting/","insights":"https://www.getjobber.com/features/field-service-reporting/","quickbooks":"https://www.getjobber.com/features/quickbooks-sync/","website":"https://www.getjobber.com/features/marketing-tools/website/","review":"https://www.getjobber.com/features/marketing-tools/reviews/","referral":"https://www.getjobber.com/features/marketing-tools/referrals/","marketing":"https://www.getjobber.com/features/marketing-suite/","photo":"https://www.getjobber.com/features/field-service-management-app/","checklist":"https://www.getjobber.com/features/quote-request-form/","expense":"https://www.getjobber.com/features/job-costing-software/"};
 function autoLink(t){var p=(t||'').toLowerCase();for(var k in LINKS){if(p.indexOf(k)!==-1)return LINKS[k];}return '';}
 function fmtFeat(f){var txt=typeof f==='string'?f:(f.text||'');var lnk=(typeof f==='object'?f.link:'')||autoLink(txt);return txt?(lnk?'<a href="'+lnk+'" target="_blank">'+txt+'</a>':txt):'';}
+function E(id){return document.getElementById(id);}
+function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
+// ═══ INDUSTRY DATA ═══
 var DATA={
-landscaping:{label:"Landscaping",goals:{"Increase Revenue":{features:["Advanced Quoting with Upsells & Tiered Pricing","Automated Quote Follow-ups","Marketing Suite & Email Campaigns"],impact:"Recover up to 30% of quotes that go cold. Tiered pricing increases average job value."},"Reduce Admin Workload":{features:["All-in-One CRM & Operations Hub","Automated Client Notifications","AI-Assisted Quote Drafting"],impact:"Cut 10+ hours/week on quoting, scheduling, invoicing."},"Improve Cash Flow":{features:["Jobber Payments (CC, ACH, Tap to Pay)","Automatic Payment Reminders","Progress Invoicing & Deposits"],impact:"Collect payment 2-3x faster. Progress invoicing keeps cash flowing."},"Recruit & Retain Labor":{features:["World-Class Mobile App for Crews","Automatic Time Tracking","GPS Tracking & Dispatch"],impact:"Modern app makes crew's day easier. Reduces turnover."},"Win More Quotes":{features:["Professional Branded Quoting","Client Hub for Online Approvals","High-Value Quote Alerts"],impact:"Online approvals make it effortless to say yes."},"Differentiate from Competitors":{features:["Client Hub (Branded Portal)","Automated Google Review Requests","Free Professional Website"],impact:"Professional quotes and 5-star reviews position you as premium."},"Consolidate Tools":{features:["Central Hub Replacing Spreadsheets","QuickBooks Online Sync","Integrated Scheduling, Invoicing & CRM"],impact:"Replace your patchwork of apps with one source of truth."},"Optimize Routes & Scheduling":{features:["Route Optimization","Recurring Job Scheduling","Drag-and-Drop Calendar"],impact:"Reduce drive time and fit more jobs per crew per day."},"Understand Job Profitability":{features:["Job Costing (Labor, Materials, Expenses)","Insights Dashboard","Time & Expense Tracking"],impact:"See exactly which services drive margins."},"Build Online Reputation":{features:["Automated Review Requests","Email Campaigns","Referral Program"],impact:"Reviews are the #1 lead source. Automate to build social proof."}}},
-lawncare:{label:"Lawn Care",goals:{"Consolidate Systems":{features:["All-in-One CRM, Scheduling & Invoicing","QuickBooks Online Sync","Centralized Client Notes"],impact:"Replace 3-5 disconnected tools."},"Reduce Admin & Automate":{features:["Automated Notifications","Auto-Invoicing","Custom Automation Builder"],impact:"Cut admin time in half."},"Optimize Routing":{features:["Route Optimization","GPS Tracking","Find a Time"],impact:"Fit more lawns per day."},"Get Paid Faster":{features:["Cards on File","Automated Invoice Follow-ups","Online Payment Portal"],impact:"Auto-billing eliminates delays."},"Grow & Acquire Clients":{features:["Online Booking (24/7)","Marketing Suite","Free Professional Website"],impact:"New clients book around the clock."},"Scale with More Crews":{features:["Mobile App","GPS Time Tracking","Productivity Reporting"],impact:"Easy onboarding. Accountability."},"Build Professional Image":{features:["Client Hub","Automated Google Reviews","Professional Quoting"],impact:"Stand out with 5-star reputation."},"Reduce Cancellations":{features:["Automated Reminders","Online Booking Deposits","Client Hub Self-Service"],impact:"Reminders reduce no-shows."}}},
-cleaning:{label:"Residential Cleaning",goals:{"Grow & Add Clients":{features:["Online Booking with Deposits","Marketing Suite & Referrals","Free Website"],impact:"Clients book 24/7."},"Maximize Daily Efficiency":{features:["Route Optimization","Recurring Scheduling","Find a Time"],impact:"More cleans per day."},"Get Paid Automatically":{features:["Auto-Billing","Auto-Invoicing","Payment Reminders"],impact:"Get paid same day, every visit."},"Reduce Cancellations":{features:["Automated Reminders","Client Hub Self-Service","Deposits"],impact:"Reminders cut no-shows."},"Transition to Managing":{features:["All-in-One Hub","Insights Dashboard","Automated Workflows"],impact:"Save 10+ hours/week on admin."},"Look Professional":{features:["Client Hub","Professional Quoting","Automated Reviews"],impact:"Premium positioning."},"Track Team Accountability":{features:["GPS Time Tracking","Job Checklists","Productivity Reporting"],impact:"Verify when and where cleaners work."},"Automate Communications":{features:["Automated SMS & Email","Two-Way Texting","On-My-Way Texts"],impact:"Reduce phone calls."}}},
-hvac:{label:"HVAC",goals:{"Win Service Contracts":{features:["Recurring Scheduling","Automated Reminders","Online Booking"],impact:"Predictable recurring revenue."},"Manage Emergency Calls":{features:["Emergency Online Booking","Real-Time Calendar","Two-Way Texting"],impact:"Minimize response time."},"Optimize Service Routes":{features:["Route Optimization","GPS Tracking","Find a Time"],impact:"10-15 calls per day."},"Control Labor & Parts":{features:["Time Tracking","Parts Tracking","Job Costing"],impact:"See margins on all services."},"Get Paid Faster":{features:["Jobber Payments","Payment Reminders","Auto-Billing"],impact:"Same-day payment."},"Build Relationships":{features:["Service Reminders","Email Campaigns","Referral Program"],impact:"Referrals drive growth."},"Consolidate Operations":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"One unified platform."},"Scale with Technicians":{features:["Mobile App","Location Tracking","Productivity Reports"],impact:"Add techs without losing control."}}},
-plumbing:{label:"Plumbing",goals:{"Win Emergency Calls":{features:["24/7 Online Booking","Real-Time Dispatch","Service Alerts"],impact:"Get to jobs faster."},"Optimize Routes":{features:["Route Optimization","GPS Tracking","Find a Time"],impact:"12-15 calls per day."},"Control Costs":{features:["Time Tracking","Parts Tracking","Job Costing"],impact:"See margins on all work."},"Get Paid Faster":{features:["Jobber Payments","Payment Reminders","Deposits"],impact:"Same-day payment."},"Win Large Projects":{features:["Professional Quoting","Progress Invoicing","Visual Estimates"],impact:"Win renovation jobs."},"Consolidate Operations":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"One unified platform."},"Scale with Plumbers":{features:["Mobile App","Location Tracking","Quality Reports"],impact:"Consistent quality."}}},
-electrical:{label:"Electrical",goals:{"Win More Estimates":{features:["Professional Quoting","Visual Estimates","Quote Alerts"],impact:"Win complex jobs."},"Manage Service Calls":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"More calls per day."},"Control Costs":{features:["Time Tracking","Expense Tracking","Job Costing"],impact:"See margins clearly."},"Get Paid Faster":{features:["Progress Invoicing","Jobber Payments","Reminders"],impact:"Cash flows on projects."},"Build Reputation":{features:["Automated Reviews","Referral Program","Email Campaigns"],impact:"5-star reviews drive growth."},"Consolidate Operations":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"Replace 4-5 tools."}}},
-construction:{label:"Construction",goals:{"Win More Bids":{features:["Detailed Quoting","Visual Estimates","Tiered Pricing"],impact:"Options increase value 10-20%."},"Manage Multi-Phase Projects":{features:["Progress Invoicing","Milestone Billing","Budget Tracking"],impact:"Invoice by phase."},"Control Labor Costs":{features:["Time Tracking","Productivity Reports","Real-Time Visibility"],impact:"Prevent cost overruns."},"Get Paid Faster":{features:["Jobber Payments","Progress Invoicing","Reminders"],impact:"Deposits and progress payments."},"Build Reputation":{features:["Automated Reviews","Photo Portfolio","Client Hub"],impact:"Portfolio builds authority."},"Consolidate Operations":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"Replace 4-5 tools."}}},
-treecare:{label:"Tree Care",goals:{"Recover Lost Quotes":{features:["Automated Quote Follow-ups","High-Value Alerts","Pipeline Tracking"],impact:"Recover 30% of cold quotes."},"Consolidate Tools":{features:["All-in-One CRM","QuickBooks Sync","Searchable History"],impact:"Replace notebooks."},"Accurate Costing":{features:["Job Costing","Financial Reporting","Expense Tracking"],impact:"Cover real overhead."},"Command Premium Pricing":{features:["Visual Quoting","Client Hub","Automated Reviews"],impact:"Differentiate as craftsman."},"Manage Field Crews":{features:["Mobile App with GPS","Two-Way Texting","Safety Checklists"],impact:"Keep crews safe."},"Collect Payment Faster":{features:["Jobber Payments","Progress Invoicing","Automated Follow-ups"],impact:"Deposits upfront."},"Grow & Capture Leads":{features:["Online Booking","Lead Management","Professional Website"],impact:"No missed opportunities."}}},
-pestcontrol:{label:"Pest Control",goals:{"High-Volume Calls":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"20-30 calls per day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Payment Reminders"],impact:"Hands-free revenue."},"Get Paid Fast":{features:["Jobber Payments","On-Site Collection","Reminders"],impact:"Same-day payment."},"Grow Business":{features:["Online Booking","Marketing Suite","Referral Program"],impact:"New customers book anytime."},"Build Authority":{features:["Automated Reviews","Website","Before/After Photos"],impact:"5-star expert."},"Scale Operations":{features:["Mobile App","Location Tracking","Productivity Reports"],impact:"Add techs easily."}}},
-pressurewashing:{label:"Pressure Washing",goals:{"High-Volume Jobs":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"25-40 jobs per day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Payment Reminders"],impact:"Monthly auto-billing."},"Get Paid Immediately":{features:["Jobber Payments","On-Site Collection","Reminders"],impact:"Same-day payment."},"Grow Business":{features:["Online Booking","Marketing Suite","Referral Program"],impact:"Referrals drive growth."},"Build Reputation":{features:["Automated Reviews","Before/After Photos","Website"],impact:"5-star reviews."},"Scale Operations":{features:["Mobile App","Location Tracking","Productivity Reports"],impact:"Add crews easily."}}},
-roofing:{label:"Roofing",goals:{"Win Jobs":{features:["Quoting with Material Options","Visual Estimates","Tiered Pricing"],impact:"Increase conversions."},"Weather Schedules":{features:["Drag-and-Drop Calendar","Rescheduling Notifications","Real-Time Coordination"],impact:"Move jobs when weather changes."},"Control Costs":{features:["Time Tracking","Material Tracking","Job Costing"],impact:"See margins by roof type."},"Get Paid Faster":{features:["Deposits","Jobber Payments","Progress Invoicing"],impact:"Deposits upfront."},"Build Portfolio":{features:["Before/After Photos","Automated Reviews","Website"],impact:"Premium positioning."},"Scale Crews":{features:["Mobile App","GPS Tracking","Safety Reporting"],impact:"Add crews with confidence."}}},
-painting:{label:"Painting",goals:{"Win More Jobs":{features:["Quoting with Color Options","Visual Estimates","Tiered Pricing"],impact:"Photo-rich quotes convert."},"Multi-Day Projects":{features:["Progress Invoicing","Detailed Notes","Project Tracking"],impact:"Invoice by room or phase."},"Control Costs":{features:["Time Tracking","Material Tracking","Job Costing"],impact:"See margins per room."},"Get Paid Faster":{features:["Deposits","Jobber Payments","Progress Invoicing"],impact:"Deposits upfront."},"Build Portfolio":{features:["Before/After Photos","Automated Reviews","Website"],impact:"5-star reviews."},"Scale Painters":{features:["Mobile App","GPS Tracking","Crew Reports"],impact:"Onboard quickly."}}},
-handyman:{label:"Handyman",goals:{"Win More Jobs":{features:["Professional Quoting","Visual Estimates","Quote Alerts"],impact:"Follow-ups recover cold quotes."},"Maximize Efficiency":{features:["Route Optimization","GPS Tracking","Drag-and-Drop Scheduling"],impact:"6-8 jobs instead of 3-4."},"Get Paid Faster":{features:["Jobber Payments","Payment Reminders","Auto-Invoicing"],impact:"Same-day payment."},"Build Reputation":{features:["Automated Reviews","Before/After Photos","Website"],impact:"Reviews build authority."},"Simplify Operations":{features:["All-in-One CRM","QuickBooks Sync","Automated Invoicing"],impact:"Replace 3-4 tools."},"Scale Business":{features:["Mobile App","GPS Tracking","Productivity Reports"],impact:"Hire with confidence."}}},
-poolspa:{label:"Pool & Spa",goals:{"Weekly Service":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"30-50 pools per week."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Payment Reminders"],impact:"Monthly auto-billing."},"Get Paid Fast":{features:["Jobber Payments","On-Site Payment","Reminders"],impact:"Consistent cash flow."},"Win Repairs":{features:["Professional Quoting","Visual Estimates","Tiered Pricing"],impact:"Win equipment jobs."},"Build Authority":{features:["Automated Reviews","Website","Before/After Photos"],impact:"Trusted pool expert."},"Scale Technicians":{features:["Mobile App","Location Tracking","Productivity Reports"],impact:"Add techs easily."}}},
-snowremoval:{label:"Snow Removal",goals:{"Seasonal Contracts":{features:["Recurring Scheduling","Automated Alerts","Drag-and-Drop Calendar"],impact:"Real-time alerts for snow."},"Optimize Routes":{features:["Route Optimization","GPS Dispatch","Real-Time Adjustments"],impact:"Full coverage in storms."},"Automate Billing":{features:["Recurring Invoicing","Jobber Payments","Reminders"],impact:"Consistent revenue."},"Manage Teams":{features:["Mobile App","Team Coordination","GPS Tracking"],impact:"Deploy multiple plows."},"Grow Territory":{features:["Online Booking","Marketing Suite","Referral Program"],impact:"Customers sign online."},"Build Reputation":{features:["Automated Reviews","Website","Communication"],impact:"Go-to snow service."}}},
-junkremoval:{label:"Junk Removal",goals:{"Optimize Routes":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"15-20 locations per day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Reminders"],impact:"Monthly auto-billing."},"Get Paid Fast":{features:["Jobber Payments","On-Site Invoicing","Reminders"],impact:"Same-day payment."},"Grow Territory":{features:["Online Booking","Marketing Suite","Referral Program"],impact:"Customers book online."},"Build Authority":{features:["Automated Reviews","Website","Before/After Photos"],impact:"Trusted expert."},"Scale Operations":{features:["Mobile App","Location Tracking","Productivity Reports"],impact:"Add crews easily."}}},
-windowwashing:{label:"Window Washing",goals:{"High-Volume":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"40-60 jobs per day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Reminders"],impact:"Monthly auto-billing."},"Get Paid":{features:["Jobber Payments","On-Site Payment","Reminders"],impact:"Same-day payment."},"Grow Business":{features:["Online Booking","Marketing Suite","Referral Program"],impact:"Customers book online."},"Build Authority":{features:["Automated Reviews","Before/After Photos","Website"],impact:"5-star branding."},"Scale Operations":{features:["Mobile App","Location Tracking","Productivity Reports"],impact:"Add crews easily."}}},
-renovations:{label:"Renovations",goals:{"Win Large Contracts":{features:["Detailed Quoting","Visual Estimates","Tiered Pricing"],impact:"Win large renovation jobs."},"Multi-Phase Projects":{features:["Progress Invoicing","Milestone Billing","Detailed Notes"],impact:"Invoice by phase."},"Control Costs":{features:["Time Tracking","Material Tracking","Job Costing"],impact:"See costs per trade."},"Get Paid Promptly":{features:["Deposits","Jobber Payments","Progress Invoicing"],impact:"Deposits upfront."},"Build Portfolio":{features:["Before/After Photos","Automated Reviews","Website"],impact:"Win premium contracts."},"Scale Business":{features:["Mobile App","Real-Time Visibility","Productivity Reports"],impact:"Add PMs confidently."}}},
-other:{label:"Other",goals:{"Win More Quotes":{features:["Professional Quoting","Automated Follow-ups","Quote Alerts"],impact:"Follow-ups recover cold quotes."},"Reduce Admin":{features:["All-in-One CRM","Automated Notifications","Automation Builder"],impact:"Cut admin time in half."},"Optimize Scheduling":{features:["Route Optimization","Drag-and-Drop Calendar","GPS Dispatch"],impact:"Fit more jobs per day."},"Get Paid Faster":{features:["Jobber Payments","Payment Reminders","Progress Invoicing"],impact:"Collect in the field."},"Grow Customers":{features:["Online Booking","Marketing Suite","Referral Program"],impact:"Customers book anytime."},"Build Reputation":{features:["Automated Reviews","Website","Before/After Photos"],impact:"5-star premium choice."},"Consolidate Tools":{features:["All-in-One Platform","QuickBooks Sync","Centralized Records"],impact:"Replace 3-5 tools."},"Understand Profitability":{features:["Job Costing","Financial Reporting","Time Tracking"],impact:"See what drives margins."},"Scale Business":{features:["Mobile App","GPS Tracking","Productivity Reports"],impact:"Add team confidently."}}}
+landscaping:{label:"Landscaping",goals:{"Increase Revenue":{features:["Advanced Quoting with Upsells & Tiered Pricing","Automated Quote Follow-ups","Marketing Suite & Email Campaigns"],impact:"Recover up to 30% of quotes that go cold."},"Reduce Admin Workload":{features:["All-in-One CRM & Operations Hub","Automated Client Notifications","AI-Assisted Quote Drafting"],impact:"Cut 10+ hours/week on admin."},"Improve Cash Flow":{features:["Jobber Payments (CC, ACH, Tap to Pay)","Automatic Payment Reminders","Progress Invoicing & Deposits"],impact:"Collect payment 2-3x faster."},"Recruit & Retain Labor":{features:["World-Class Mobile App for Crews","Automatic Time Tracking","GPS Tracking & Dispatch"],impact:"Modern app reduces turnover."},"Win More Quotes":{features:["Professional Branded Quoting","Client Hub for Online Approvals","High-Value Quote Alerts"],impact:"Online approvals make it easy to say yes."},"Differentiate from Competitors":{features:["Client Hub (Branded Portal)","Automated Google Reviews","Free Professional Website"],impact:"5-star reviews position you as premium."},"Consolidate Tools":{features:["Central Hub Replacing Spreadsheets","QuickBooks Sync","Integrated Scheduling & CRM"],impact:"One source of truth."},"Optimize Routes":{features:["Route Optimization","Recurring Scheduling","Drag-and-Drop Calendar"],impact:"More jobs per crew per day."},"Understand Profitability":{features:["Job Costing","Insights Dashboard","Time & Expense Tracking"],impact:"See which services drive margins."},"Build Reputation":{features:["Automated Review Requests","Email Campaigns","Referral Program"],impact:"Automate social proof."}}},
+lawncare:{label:"Lawn Care",goals:{"Consolidate Systems":{features:["All-in-One CRM & Invoicing","QuickBooks Sync","Centralized Notes"],impact:"Replace 3-5 tools."},"Reduce Admin":{features:["Automated Notifications","Auto-Invoicing","Automation Builder"],impact:"Cut admin in half."},"Optimize Routing":{features:["Route Optimization","GPS Tracking","Find a Time"],impact:"More lawns per day."},"Get Paid Faster":{features:["Cards on File","Invoice Follow-ups","Online Portal"],impact:"Same-day payment."},"Grow Clients":{features:["Online Booking","Marketing Suite","Website"],impact:"24/7 booking."},"Scale Crews":{features:["Mobile App","GPS Tracking","Productivity Reports"],impact:"Easy onboarding."},"Build Image":{features:["Client Hub","Automated Reviews","Professional Quoting"],impact:"5-star reputation."},"Reduce Cancellations":{features:["Automated Reminders","Deposits","Client Hub Self-Service"],impact:"Fewer no-shows."}}},
+cleaning:{label:"Residential Cleaning",goals:{"Grow Clients":{features:["Online Booking with Deposits","Marketing & Referrals","Website"],impact:"Clients book 24/7."},"Maximize Efficiency":{features:["Route Optimization","Recurring Scheduling","Find a Time"],impact:"More cleans per day."},"Get Paid Automatically":{features:["Auto-Billing","Auto-Invoicing","Reminders"],impact:"Paid same day."},"Reduce Cancellations":{features:["Automated Reminders","Client Hub","Deposits"],impact:"Cut no-shows."},"Transition to Managing":{features:["All-in-One Hub","Insights Dashboard","Workflows"],impact:"Save 10+ hrs/week."},"Look Professional":{features:["Client Hub","Professional Quoting","Automated Reviews"],impact:"Premium positioning."},"Team Accountability":{features:["GPS Tracking","Checklists","Productivity Reports"],impact:"Verify work."},"Automate Comms":{features:["SMS & Email Automation","Two-Way Texting","On-My-Way"],impact:"Fewer phone calls."}}},
+hvac:{label:"HVAC",goals:{"Win Service Contracts":{features:["Recurring Scheduling","Automated Reminders","Online Booking"],impact:"Predictable revenue."},"Emergency Calls":{features:["Emergency Booking","Real-Time Calendar","Two-Way Texting"],impact:"Fast response."},"Optimize Routes":{features:["Route Optimization","GPS Tracking","Find a Time"],impact:"10-15 calls/day."},"Control Costs":{features:["Time Tracking","Parts Tracking","Job Costing"],impact:"See all margins."},"Get Paid Faster":{features:["Jobber Payments","Reminders","Auto-Billing"],impact:"Same-day payment."},"Build Relationships":{features:["Service Reminders","Email Campaigns","Referral Program"],impact:"Referrals drive growth."},"Consolidate Ops":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"One platform."},"Scale Techs":{features:["Mobile App","Location Tracking","Productivity Reports"],impact:"Add techs easily."}}},
+plumbing:{label:"Plumbing",goals:{"Win Emergency Calls":{features:["24/7 Booking","Real-Time Dispatch","Alerts"],impact:"Get to jobs faster."},"Optimize Routes":{features:["Route Optimization","GPS Tracking","Find a Time"],impact:"12-15 calls/day."},"Control Costs":{features:["Time Tracking","Parts Tracking","Job Costing"],impact:"See all margins."},"Get Paid Faster":{features:["Jobber Payments","Reminders","Deposits"],impact:"Same-day payment."},"Win Large Projects":{features:["Professional Quoting","Progress Invoicing","Visual Estimates"],impact:"Win renovation jobs."},"Consolidate Ops":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"One platform."},"Scale Plumbers":{features:["Mobile App","Location Tracking","Quality Reports"],impact:"Consistent quality."}}},
+electrical:{label:"Electrical",goals:{"Win Estimates":{features:["Professional Quoting","Visual Estimates","Quote Alerts"],impact:"Win complex jobs."},"Manage Calls":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"More calls/day."},"Control Costs":{features:["Time Tracking","Expense Tracking","Job Costing"],impact:"See margins."},"Get Paid Faster":{features:["Progress Invoicing","Jobber Payments","Reminders"],impact:"Cash flows."},"Build Reputation":{features:["Automated Reviews","Referrals","Email Campaigns"],impact:"5-star growth."},"Consolidate Ops":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"Replace 4-5 tools."}}},
+construction:{label:"Construction",goals:{"Win Bids":{features:["Detailed Quoting","Visual Estimates","Tiered Pricing"],impact:"Increase value 10-20%."},"Multi-Phase Projects":{features:["Progress Invoicing","Milestone Billing","Budget Tracking"],impact:"Invoice by phase."},"Control Labor":{features:["Time Tracking","Productivity Reports","Real-Time Visibility"],impact:"Prevent overruns."},"Get Paid Faster":{features:["Jobber Payments","Progress Invoicing","Reminders"],impact:"Progress payments."},"Build Reputation":{features:["Automated Reviews","Photo Portfolio","Client Hub"],impact:"Authority."},"Consolidate Ops":{features:["All-in-One CRM","QuickBooks Sync","Integrated Platform"],impact:"Replace 4-5 tools."}}},
+treecare:{label:"Tree Care",goals:{"Recover Quotes":{features:["Automated Follow-ups","High-Value Alerts","Pipeline Tracking"],impact:"Recover 30% of cold quotes."},"Consolidate Tools":{features:["All-in-One CRM","QuickBooks Sync","Searchable History"],impact:"Replace notebooks."},"Accurate Costing":{features:["Job Costing","Financial Reporting","Expense Tracking"],impact:"Cover real overhead."},"Premium Pricing":{features:["Visual Quoting","Client Hub","Automated Reviews"],impact:"Differentiate."},"Manage Crews":{features:["Mobile App","Two-Way Texting","Safety Checklists"],impact:"Keep crews safe."},"Collect Faster":{features:["Jobber Payments","Progress Invoicing","Follow-ups"],impact:"Deposits upfront."},"Capture Leads":{features:["Online Booking","Lead Management","Website"],impact:"No missed opportunities."}}},
+pestcontrol:{label:"Pest Control",goals:{"High-Volume":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"20-30 calls/day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Reminders"],impact:"Hands-free."},"Get Paid Fast":{features:["Jobber Payments","On-Site Collection","Reminders"],impact:"Same-day."},"Grow Business":{features:["Online Booking","Marketing Suite","Referrals"],impact:"Book anytime."},"Build Authority":{features:["Automated Reviews","Website","Photos"],impact:"5-star."},"Scale Ops":{features:["Mobile App","Location Tracking","Reports"],impact:"Add techs."}}},
+pressurewashing:{label:"Pressure Washing",goals:{"High-Volume":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"25-40 jobs/day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Reminders"],impact:"Monthly auto-billing."},"Get Paid":{features:["Jobber Payments","On-Site Collection","Reminders"],impact:"Same-day."},"Grow Business":{features:["Online Booking","Marketing Suite","Referrals"],impact:"Referrals grow."},"Build Reputation":{features:["Automated Reviews","Before/After Photos","Website"],impact:"5-star."},"Scale Ops":{features:["Mobile App","Location Tracking","Reports"],impact:"Add crews."}}},
+roofing:{label:"Roofing",goals:{"Win Jobs":{features:["Material Quoting","Visual Estimates","Tiered Pricing"],impact:"More conversions."},"Weather Schedules":{features:["Drag-and-Drop Calendar","Notifications","Coordination"],impact:"Quick rescheduling."},"Control Costs":{features:["Time Tracking","Material Tracking","Job Costing"],impact:"Margins by type."},"Get Paid Faster":{features:["Deposits","Jobber Payments","Progress Invoicing"],impact:"Deposits upfront."},"Build Portfolio":{features:["Before/After Photos","Reviews","Website"],impact:"Premium."},"Scale Crews":{features:["Mobile App","GPS Tracking","Safety Reports"],impact:"Confidence."}}},
+painting:{label:"Painting",goals:{"Win Jobs":{features:["Color Option Quoting","Visual Estimates","Tiered Pricing"],impact:"Converts."},"Multi-Day Projects":{features:["Progress Invoicing","Detailed Notes","Tracking"],impact:"Invoice by room."},"Control Costs":{features:["Time Tracking","Material Tracking","Job Costing"],impact:"Margins per room."},"Get Paid Faster":{features:["Deposits","Jobber Payments","Progress Invoicing"],impact:"Deposits upfront."},"Build Portfolio":{features:["Before/After Photos","Reviews","Website"],impact:"5-star."},"Scale Painters":{features:["Mobile App","GPS Tracking","Crew Reports"],impact:"Quick onboarding."}}},
+handyman:{label:"Handyman",goals:{"Win Jobs":{features:["Professional Quoting","Visual Estimates","Quote Alerts"],impact:"Recover cold quotes."},"Maximize Efficiency":{features:["Route Optimization","GPS Tracking","Scheduling"],impact:"6-8 jobs/day."},"Get Paid Faster":{features:["Jobber Payments","Reminders","Auto-Invoicing"],impact:"Same-day."},"Build Reputation":{features:["Automated Reviews","Photos","Website"],impact:"Authority."},"Simplify Ops":{features:["All-in-One CRM","QuickBooks Sync","Invoicing"],impact:"One system."},"Scale Business":{features:["Mobile App","GPS Tracking","Reports"],impact:"Hire confidently."}}},
+poolspa:{label:"Pool & Spa",goals:{"Weekly Service":{features:["Route Optimization","GPS Dispatch","Recurring Scheduling"],impact:"30-50 pools/week."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Reminders"],impact:"Monthly auto-billing."},"Get Paid Fast":{features:["Jobber Payments","On-Site Payment","Reminders"],impact:"Consistent."},"Win Repairs":{features:["Professional Quoting","Visual Estimates","Tiered Pricing"],impact:"Equipment jobs."},"Build Authority":{features:["Automated Reviews","Website","Photos"],impact:"Trusted."},"Scale Techs":{features:["Mobile App","Location Tracking","Reports"],impact:"Add techs."}}},
+snowremoval:{label:"Snow Removal",goals:{"Seasonal Contracts":{features:["Recurring Scheduling","Alerts","Calendar"],impact:"Real-time alerts."},"Optimize Routes":{features:["Route Optimization","GPS Dispatch","Adjustments"],impact:"Full coverage."},"Automate Billing":{features:["Recurring Invoicing","Jobber Payments","Reminders"],impact:"Consistent."},"Manage Teams":{features:["Mobile App","Coordination","GPS Tracking"],impact:"Multiple plows."},"Grow Territory":{features:["Online Booking","Marketing","Referrals"],impact:"Sign online."},"Build Reputation":{features:["Automated Reviews","Website","Communication"],impact:"Go-to service."}}},
+junkremoval:{label:"Junk Removal",goals:{"Optimize Routes":{features:["Route Optimization","GPS Dispatch","Scheduling"],impact:"15-20 locations/day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Reminders"],impact:"Auto-billing."},"Get Paid Fast":{features:["Jobber Payments","On-Site Invoicing","Reminders"],impact:"Same-day."},"Grow Territory":{features:["Online Booking","Marketing","Referrals"],impact:"Book online."},"Build Authority":{features:["Automated Reviews","Website","Photos"],impact:"Trusted."},"Scale Ops":{features:["Mobile App","Location Tracking","Reports"],impact:"Add crews."}}},
+windowwashing:{label:"Window Washing",goals:{"High-Volume":{features:["Route Optimization","GPS Dispatch","Scheduling"],impact:"40-60 jobs/day."},"Automate Revenue":{features:["Auto-Billing","Cards on File","Reminders"],impact:"Auto-billing."},"Get Paid":{features:["Jobber Payments","On-Site Payment","Reminders"],impact:"Same-day."},"Grow Business":{features:["Online Booking","Marketing","Referrals"],impact:"Book online."},"Build Authority":{features:["Automated Reviews","Photos","Website"],impact:"5-star."},"Scale Ops":{features:["Mobile App","Location Tracking","Reports"],impact:"Add crews."}}},
+renovations:{label:"Renovations",goals:{"Win Contracts":{features:["Detailed Quoting","Visual Estimates","Tiered Pricing"],impact:"Win large jobs."},"Multi-Phase":{features:["Progress Invoicing","Milestone Billing","Notes"],impact:"By phase."},"Control Costs":{features:["Time Tracking","Material Tracking","Job Costing"],impact:"Per trade."},"Get Paid":{features:["Deposits","Jobber Payments","Progress Invoicing"],impact:"Upfront."},"Build Portfolio":{features:["Photos","Reviews","Website"],impact:"Premium contracts."},"Scale Business":{features:["Mobile App","Visibility","Reports"],impact:"Add PMs."}}},
+other:{label:"Other",goals:{"Win Quotes":{features:["Professional Quoting","Follow-ups","Alerts"],impact:"Recover cold quotes."},"Reduce Admin":{features:["All-in-One CRM","Notifications","Automation"],impact:"Cut admin in half."},"Optimize Scheduling":{features:["Route Optimization","Calendar","GPS Dispatch"],impact:"More jobs/day."},"Get Paid Faster":{features:["Jobber Payments","Reminders","Progress Invoicing"],impact:"Field collection."},"Grow Customers":{features:["Online Booking","Marketing","Referrals"],impact:"Book anytime."},"Build Reputation":{features:["Automated Reviews","Website","Photos"],impact:"Premium."},"Consolidate Tools":{features:["All-in-One Platform","QuickBooks Sync","Records"],impact:"Replace 3-5 tools."},"Understand Profitability":{features:["Job Costing","Reporting","Time Tracking"],impact:"See margins."},"Scale Business":{features:["Mobile App","GPS Tracking","Reports"],impact:"Add team."}}}
 };
 function getIndData(){return DATA[ind]||DATA['other'];}
 
+// ═══ ROI QUESTION DEFINITIONS ═══
+// Each question maps to goal keywords. Questions appear when matching goals are selected.
+var ROI_QUESTIONS=[
+  {id:'adminHrs',match:['admin','automate','consolidate','transition','simplify','reduce admin'],label:'How many hours/week does your team spend on admin?',hint:'Quoting, scheduling, invoicing, follow-ups, data entry',placeholder:'e.g. 10',type:'number',unit:'hrs/week'},
+  {id:'adminRate',match:['admin','automate','consolidate','transition','simplify','reduce admin'],label:'What do you estimate that admin time costs per hour?',hint:'Include the value of your time or office staff wages',placeholder:'e.g. 25',type:'number',unit:'$/hr'},
+  {id:'quotesPerWeek',match:['quote','bid','estimate','win','revenue','increase revenue'],label:'How many quotes/estimates do you send per week?',hint:'Include all proposals, formal and informal',placeholder:'e.g. 12',type:'number',unit:'quotes/week'},
+  {id:'quoteCloseRate',match:['quote','bid','estimate','win','revenue','increase revenue'],label:'What percentage of those quotes do you win today?',hint:'Your best guess is fine',placeholder:'e.g. 40',type:'number',unit:'%'},
+  {id:'avgJobValue',match:['quote','bid','estimate','win','revenue','paid','payment','cash','route','routing','scheduling','efficiency','scale','crew','labor','profitability','profit','costing'],label:'What is your average job value?',hint:'Across all service types',placeholder:'e.g. 200',type:'number',unit:'$'},
+  {id:'daysToCollect',match:['paid','payment','cash','billing','invoic'],label:'How many days does it typically take to collect payment?',hint:'From job completion to money in your account',placeholder:'e.g. 21',type:'number',unit:'days'},
+  {id:'monthlyRevenue',match:['paid','payment','cash','billing','invoic'],label:'What is your approximate monthly revenue?',hint:'Rough estimate is fine',placeholder:'e.g. 30000',type:'number',unit:'$/month'},
+  {id:'jobsPerDay',match:['route','routing','scheduling','efficiency','daily','maximize'],label:'How many jobs does each crew complete per day?',hint:'Average across a typical week',placeholder:'e.g. 5',type:'number',unit:'jobs/day'},
+  {id:'crewCount',match:['route','routing','scheduling','scale','crew','labor','recruit','retain','team','technician'],label:'How many crews or technicians do you have?',hint:'Including yourself if you work in the field',placeholder:'e.g. 3',type:'number',unit:'crews'},
+  {id:'noShowRate',match:['cancellation','no-show','reduce cancel'],label:'What percentage of appointments are no-shows or cancellations?',hint:'Rough estimate',placeholder:'e.g. 10',type:'number',unit:'%'},
+  {id:'coldQuotePercent',match:['reputation','referral','review','grow','acquire','follow'],label:'What percentage of your quotes go cold with no response?',hint:'Quotes you never hear back on',placeholder:'e.g. 30',type:'number',unit:'%'}
+];
+
 var rows=[],steps=[],ind='',pkSel,pkAvail=[],dragIdx=null,saveTimer=null;
+var roiInputs={};
 
-// ROI
-var ROI_MAP={
-admin:{match:['admin','automate','consolidate','transition','simplify'],icon:'T',label:'Time Saved on Admin',calc:function(c,j,a){var h=Math.min(3+Math.floor(c*0.8),12);var s=h*52*22;return{value:'$'+s.toLocaleString(),detail:'~'+h+' hrs/week x $22/hr x 52 weeks',assumption:'Admin cost $22/hr scaling with team of '+c,tag:'Time savings'};}},
-quotes:{match:['quote','bid','estimate','win more','revenue','increase revenue'],icon:'R',label:'Revenue from Winning More Quotes',calc:function(c,j,a){var s=Math.round(j*a*0.10*52);return{value:'$'+s.toLocaleString(),detail:'10% improvement on $'+(j*a).toLocaleString()+'/week',assumption:'Professional quoting improves close rate ~10%',tag:'New revenue'};}},
-cashflow:{match:['cash flow','paid faster','payment','billing','auto-billing','invoic'],icon:'P',label:'Faster Payment Collection',calc:function(c,j,a){return{value:'14 days faster',detail:'Reduces DSO by ~14 days',assumption:'Shift from 30-day invoicing to same-day digital',tag:'Cash flow',isNotDollar:true,dollarValue:Math.round(j*a*52*(14/365)*0.08)};}},
-followup:{match:['reputation','referral','review','cancellation','grow','acquire','client','customer'],icon:'F',label:'Recovered Revenue from Follow-ups',calc:function(c,j,a){var s=Math.round(j*a*0.05*52);return{value:'$'+s.toLocaleString(),detail:'5% of $'+(j*a).toLocaleString()+'/week recovered',assumption:'Automated follow-ups recover ~5% of cold revenue',tag:'Recovered revenue'};}},
-routing:{match:['route','routing','scheduling','efficiency'],icon:'M',label:'Increased Capacity from Routing',calc:function(c,j,a){var extra=Math.max(1,Math.round(j*0.15));var s=extra*a*52;return{value:'$'+Math.round(s).toLocaleString(),detail:'~'+extra+' more jobs/week at $'+a,assumption:'Route optimization adds 15% more capacity',tag:'Capacity gain'};}},
-labor:{match:['labor','recruit','retain','team','crew','scale','technician'],icon:'L',label:'Reduced Labor Waste',calc:function(c,j,a){var s=Math.round(c*2.5*52*20);return{value:'$'+s.toLocaleString(),detail:'~2.5 hrs/week per person reduced waste',assumption:'GPS and mobile scheduling reduce waste at $20/hr',tag:'Labor efficiency'};}},
-profitability:{match:['profitability','profit','costing','pricing','understand','margin'],icon:'G',label:'Margin Improvement from Costing',calc:function(c,j,a){var s=Math.round(j*a*52*0.03);return{value:'$'+s.toLocaleString(),detail:'~3% margin improvement on $'+(j*a*52).toLocaleString()+'/year',assumption:'Job costing improves margins 3-5%',tag:'Margin gain'};}}
-};
+// ═══ TAB SWITCHING ═══
+function switchTab(tab){
+  document.querySelectorAll('.eb-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  if(tab==='plan'){document.querySelectorAll('.eb-tab')[0].classList.add('active');E('tabPlan').classList.add('active');}
+  else{document.querySelectorAll('.eb-tab')[1].classList.add('active');E('tabROI').classList.add('active');renderROIQuestions();}
+}
 
-function autoSave(){clearTimeout(saveTimer);saveTimer=setTimeout(function(){try{localStorage.setItem('jobber_ap_draft',JSON.stringify({ind:ind,rows:rows,steps:steps,biz:E('inpBiz').value,con:E('inpCon').value,date:E('inpDate').value,team:E('selTeam').value,note:E('inpNote').value,crew:E('inpCrew').value,jobs:E('inpJobs').value,avg:E('inpAvgJob').value}));E('autosaveStatus').textContent='Saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){}},800);}
-function loadSaved(){try{var raw=localStorage.getItem('jobber_ap_draft');if(!raw)return;var s=JSON.parse(raw);if(s.ind){ind=s.ind;E('selInd').value=ind;}if(s.biz)E('inpBiz').value=s.biz;if(s.con)E('inpCon').value=s.con;if(s.date)E('inpDate').value=s.date;if(s.team)E('selTeam').value=s.team;if(s.note){E('inpNote').value=s.note;E('docNote').textContent=s.note;}if(s.crew)E('inpCrew').value=s.crew;if(s.jobs)E('inpJobs').value=s.jobs;if(s.avg)E('inpAvgJob').value=s.avg;if(s.rows)rows=s.rows;if(s.steps)steps=s.steps;render();renderSteps();refreshHdr();updateBadges();computeROI();E('autosaveStatus').textContent='Draft restored';}catch(e){}}
-function E(id){return document.getElementById(id);}
+// ═══ ROI QUESTIONS RENDERING ═══
+function renderROIQuestions(){
+  var container=E('roiQuestions');
+  if(!rows.length){container.innerHTML='<div class="roi-empty">Add goals in the Action Plan tab first.<br>ROI questions will adapt to the goals you select.</div>';E('roiDoc').style.display='none';return;}
+  var goalNames=rows.map(function(r){return(r.goal||'').toLowerCase();});
+  var visibleQs=ROI_QUESTIONS.filter(function(q){return q.match.some(function(kw){return goalNames.some(function(g){return g.indexOf(kw)!==-1;});});});
+  // Always show avgJobValue and crewCount as baseline
+  var ids=visibleQs.map(function(q){return q.id;});
+  if(ids.indexOf('avgJobValue')===-1)visibleQs.unshift(ROI_QUESTIONS[4]);
+  if(ids.indexOf('crewCount')===-1)visibleQs.push(ROI_QUESTIONS[8]);
+  // Deduplicate
+  var seen={};visibleQs=visibleQs.filter(function(q){if(seen[q.id])return false;seen[q.id]=1;return true;});
+
+  container.innerHTML=visibleQs.map(function(q){
+    var val=roiInputs[q.id]||'';
+    return '<div class="roi-q"><div class="roi-q-label">'+q.label+'</div><div class="roi-q-hint">'+q.hint+'</div><input type="number" id="roi_'+q.id+'" placeholder="'+q.placeholder+'" value="'+val+'" oninput="onROIInput(\''+q.id+'\',this.value)"><div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:3px;text-align:right">'+q.unit+'</div></div>';
+  }).join('');
+  computeROI();
+}
+
+function onROIInput(id,val){
+  roiInputs[id]=val?parseFloat(val):0;
+  computeROI();autoSave();
+}
+
+// ═══ ROI COMPUTATION ═══
+function computeROI(){
+  var ri=roiInputs;
+  var sec=E('roiDoc');
+  // Need at least avgJobValue to show anything
+  if(!ri.avgJobValue){sec.style.display='none';return;}
+
+  var items=[];var totalToday=0;var totalJobber=0;
+  var goalNames=rows.map(function(r){return(r.goal||'').toLowerCase();}).join(' ');
+
+  // 1. Admin time savings
+  if(ri.adminHrs && ri.adminRate){
+    var adminToday=ri.adminHrs*ri.adminRate*52;
+    var savedPct=0.55;// Jobber saves ~55% of admin time
+    var adminJobber=adminToday*(1-savedPct);
+    var adminSaved=adminToday-adminJobber;
+    items.push({cat:'Admin Time',today:'$'+Math.round(adminToday).toLocaleString()+'/yr',todaySub:ri.adminHrs+' hrs/week at $'+ri.adminRate+'/hr',jobber:'$'+Math.round(adminJobber).toLocaleString()+'/yr',jobberSub:Math.round(ri.adminHrs*(1-savedPct))+' hrs/week with automation',delta:'+$'+Math.round(adminSaved).toLocaleString()+' saved',saving:adminSaved});
+    totalToday+=adminToday;totalJobber+=adminJobber;
+  }
+
+  // 2. Quote conversion
+  if(ri.quotesPerWeek && ri.quoteCloseRate && ri.avgJobValue){
+    var currentWins=ri.quotesPerWeek*(ri.quoteCloseRate/100);
+    var improvedRate=Math.min(ri.quoteCloseRate+12,95);// +12% points improvement
+    var newWins=ri.quotesPerWeek*(improvedRate/100);
+    var extraJobs=(newWins-currentWins)*52;
+    var extraRev=extraJobs*ri.avgJobValue;
+    items.push({cat:'Quote Conversion',today:Math.round(ri.quoteCloseRate)+'% close rate',todaySub:Math.round(currentWins)+' wins/week x $'+ri.avgJobValue,jobber:Math.round(improvedRate)+'% close rate',jobberSub:Math.round(newWins*10)/10+' wins/week with follow-ups',delta:'+$'+Math.round(extraRev).toLocaleString()+'/yr',saving:extraRev});
+  }
+
+  // 3. Payment speed
+  if(ri.daysToCollect && ri.monthlyRevenue){
+    var annualRev=ri.monthlyRevenue*12;
+    var newDays=Math.max(ri.daysToCollect-14,1);
+    var cashImprovement=annualRev*(14/365)*0.05;// opportunity cost of delayed cash
+    items.push({cat:'Payment Speed',today:ri.daysToCollect+' days to collect',todaySub:'$'+Math.round(ri.monthlyRevenue).toLocaleString()+'/month in transit',jobber:newDays+' days to collect',jobberSub:'Same-day digital payment',delta:'+$'+Math.round(cashImprovement).toLocaleString()+'/yr freed',saving:cashImprovement});
+  }
+
+  // 4. Route efficiency
+  if(ri.jobsPerDay && ri.crewCount && ri.avgJobValue){
+    var extraPerCrew=Math.round(ri.jobsPerDay*0.15*10)/10;
+    var totalExtra=extraPerCrew*ri.crewCount*250;// 250 working days
+    var routeRev=totalExtra*ri.avgJobValue;
+    items.push({cat:'Route Efficiency',today:ri.jobsPerDay+' jobs/crew/day',todaySub:ri.crewCount+' crew(s) x 250 days',jobber:Math.round((ri.jobsPerDay+extraPerCrew)*10)/10+' jobs/crew/day',jobberSub:'15% more capacity from routing',delta:'+$'+Math.round(routeRev).toLocaleString()+'/yr',saving:routeRev});
+  }
+
+  // 5. No-show / cancellation recovery
+  if(ri.noShowRate && ri.avgJobValue && ri.jobsPerDay && ri.crewCount){
+    var totalJobs=ri.jobsPerDay*ri.crewCount*250;
+    var lostJobs=totalJobs*(ri.noShowRate/100);
+    var recoveredPct=0.5;// recover 50% with reminders/deposits
+    var recoveredRev=lostJobs*recoveredPct*ri.avgJobValue;
+    items.push({cat:'Cancellation Recovery',today:ri.noShowRate+'% no-show rate',todaySub:Math.round(lostJobs)+' lost jobs/year',jobber:Math.round(ri.noShowRate*(1-recoveredPct))+'% no-show rate',jobberSub:'Reminders & deposits cut no-shows',delta:'+$'+Math.round(recoveredRev).toLocaleString()+'/yr',saving:recoveredRev});
+  }
+
+  // 6. Cold quote recovery
+  if(ri.coldQuotePercent && ri.quotesPerWeek && ri.avgJobValue){
+    var coldPerWeek=ri.quotesPerWeek*(ri.coldQuotePercent/100);
+    var recoveredQuotes=coldPerWeek*0.25;// recover 25% with follow-ups
+    var coldRev=recoveredQuotes*52*ri.avgJobValue;
+    items.push({cat:'Cold Quote Recovery',today:ri.coldQuotePercent+'% go cold',todaySub:Math.round(coldPerWeek)+' cold quotes/week',jobber:Math.round(ri.coldQuotePercent*0.75)+'% go cold',jobberSub:'Automated follow-ups recover 25%',delta:'+$'+Math.round(coldRev).toLocaleString()+'/yr',saving:coldRev});
+  }
+
+  if(!items.length){sec.style.display='none';return;}
+
+  var totalSaving=0;items.forEach(function(it){totalSaving+=it.saving||0;});
+
+  // Render on document
+  sec.style.display='block';
+  E('roiDocSub').textContent='Based on the numbers you shared';
+  E('roiDocTotal').textContent='$'+Math.round(totalSaving).toLocaleString();
+
+  var compareHTML='<div class="roi-col-head today">Today (Without Jobber)</div><div class="roi-col-head jobber">With Jobber</div>';
+  items.forEach(function(it){
+    compareHTML+='<div class="roi-cell today"><div class="rc-cat">'+it.cat+'</div><div class="rc-val">'+it.today+'</div><div class="rc-detail">'+it.todaySub+'</div></div>';
+    compareHTML+='<div class="roi-cell jobber"><div class="rc-cat">'+it.cat+'</div><div class="rc-val">'+it.jobber+'</div><div class="rc-detail">'+it.jobberSub+'</div><div class="rc-delta save">'+it.delta+'</div></div>';
+  });
+  E('roiCompare').innerHTML=compareHTML;
+
+  // Payback
+  E('roiPayback').innerHTML='<strong>Bottom line:</strong> Based on the numbers you shared, you are currently leaving approximately <strong>
+}
+
+// ═══ AUTO-SAVE ═══
+function autoSave(){clearTimeout(saveTimer);saveTimer=setTimeout(function(){try{localStorage.setItem('jobber_ap_v2',JSON.stringify({ind:ind,rows:rows,steps:steps,roiInputs:roiInputs,biz:E('inpBiz').value,con:E('inpCon').value,date:E('inpDate').value,team:E('selTeam').value,note:E('inpNote').value}));E('autosaveStatus').textContent='Saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){}},800);}
+function loadSaved(){try{var raw=localStorage.getItem('jobber_ap_v2');if(!raw)return;var s=JSON.parse(raw);if(s.ind){ind=s.ind;E('selInd').value=ind;}if(s.biz)E('inpBiz').value=s.biz;if(s.con)E('inpCon').value=s.con;if(s.date)E('inpDate').value=s.date;if(s.team)E('selTeam').value=s.team;if(s.note){E('inpNote').value=s.note;E('docNote').textContent=s.note;}if(s.roiInputs)roiInputs=s.roiInputs;if(s.rows)rows=s.rows;if(s.steps)steps=s.steps;render();renderSteps();refreshHdr();updateBadges();computeROI();E('autosaveStatus').textContent='Draft restored';}catch(e){}}
+
 function toggleSection(id){E(id).classList.toggle('collapsed');}
 function updateBadges(){var biz=E('inpBiz').value,bp=E('badgeProspect');if(biz){bp.textContent=biz;bp.style.display='inline';}else bp.style.display='none';var bn=E('badgeNote');if(E('inpNote').value){bn.textContent='ok';bn.style.display='inline';}else bn.style.display='none';var bb=E('badgeBuild');if(rows.length){bb.textContent=rows.length+' goal'+(rows.length>1?'s':'');bb.style.display='inline';}else bb.style.display='none';}
-function changeInd(){ind=E('selInd').value;rows=[];steps=[];render();renderSteps();refreshHdr();updateBadges();computeROI();autoSave();}
+function changeInd(){ind=E('selInd').value;rows=[];steps=[];roiInputs={};render();renderSteps();refreshHdr();updateBadges();computeROI();autoSave();}
 function refreshHdr(){var b=E('inpBiz').value,c=E('inpCon').value,ts=E('selTeam'),tt=ts.value?ts.options[ts.selectedIndex].text:'--',d=getIndData(),lb=d?d.label:'--';E('hTitle').textContent=b?b+' | Custom Action Plan':'Custom Action Plan';E('hSub').textContent=b?'A tailored roadmap to streamline your '+lb.toLowerCase()+' operations with Jobber':'Your tailored roadmap to streamline operations and grow your business with Jobber';E('mInd').textContent=ind?lb:'--';E('mCon').textContent=c||'--';E('mTeam').textContent=ts.value?tt:'--';E('mDate').textContent=E('inpDate').value||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}
 function refreshNote(){E('docNote').textContent=E('inpNote').value;updateBadges();}
-function openPk(){if(!ind){E('secProspect').classList.remove('collapsed');var sel=E('selInd');sel.style.borderColor='#A8E300';sel.style.boxShadow='0 0 0 3px rgba(168,227,0,0.25)';sel.focus();setTimeout(function(){sel.style.borderColor='';sel.style.boxShadow='';},2000);return;}var d=getIndData();if(!d)return;var used={};rows.forEach(function(r){used[r.goal]=1;});pkAvail=Object.keys(d.goals).filter(function(g){return !used[g];});pkSel=new Set();E('pkSub').textContent='Choose goals for this '+d.label+' prospect';E('pkSearch').value='';renderPickerItems();updatePickerCount();E('ov').classList.add('open');setTimeout(function(){E('pkSearch').focus();},100);}
-function renderPickerItems(filter){var fl=(filter||'').toLowerCase();var d=getIndData();if(!d)return;var g=d.goals;var html=pkAvail.filter(function(k){if(!fl)return true;var dd=g[k];return k.toLowerCase().indexOf(fl)!==-1||(dd.impact||'').toLowerCase().indexOf(fl)!==-1||dd.features.some(function(f){return f.toLowerCase().indexOf(fl)!==-1;});}).map(function(k){var dd=g[k];var isOn=pkSel.has(k);return '<div class="pk-item '+(isOn?'on':'')+'" onclick="togPk(\''+k.replace(/'/g,"\\'")+'\')">'+'<div class="ck">'+(isOn?'V':'')+'</div><div class="pk-item-content"><div class="pk-item-name">'+k+'</div><div class="pk-item-preview">'+(dd.impact||'')+'</div><div class="pk-item-features">'+dd.features.slice(0,3).map(function(f){return '<span class="pk-item-feat-tag">'+f+'</span>';}).join('')+'</div></div></div>';}).join('');var co=pkSel.has('__custom__');html+='<div class="pk-item '+(co?'on':'')+'" onclick="togPk(\'__custom__\')" style="border-style:dashed"><div class="ck">'+(co?'V':'')+'</div><div class="pk-item-content"><div class="pk-item-name">+ Write Your Own Goal</div><div class="pk-item-preview">Add a custom goal</div></div></div>';E('pkList').innerHTML=html;}
+function openPk(){if(!ind){E('secProspect').classList.remove('collapsed');var sel=E('selInd');sel.style.borderColor='#A8E300';sel.style.boxShadow='0 0 0 3px rgba(168,227,0,0.25)';sel.focus();setTimeout(function(){sel.style.borderColor='';sel.style.boxShadow='';},2000);return;}var d=getIndData();if(!d)return;var used={};rows.forEach(function(r){used[r.goal]=1;});pkAvail=Object.keys(d.goals).filter(function(g){return!used[g];});pkSel=new Set();E('pkSub').textContent='Choose goals for '+d.label;E('pkSearch').value='';renderPickerItems();updatePickerCount();E('ov').classList.add('open');setTimeout(function(){E('pkSearch').focus();},100);}
+function renderPickerItems(filter){var fl=(filter||'').toLowerCase();var d=getIndData();if(!d)return;var g=d.goals;var html=pkAvail.filter(function(k){if(!fl)return true;var dd=g[k];return k.toLowerCase().indexOf(fl)!==-1||(dd.impact||'').toLowerCase().indexOf(fl)!==-1||dd.features.some(function(f){return f.toLowerCase().indexOf(fl)!==-1;});}).map(function(k){var dd=g[k];var isOn=pkSel.has(k);return '<div class="pk-item '+(isOn?'on':'')+'" onclick="togPk(\''+k.replace(/'/g,"\\'")+'\')">'+'<div class="ck">'+(isOn?'V':'')+'</div><div class="pk-item-content"><div class="pk-item-name">'+k+'</div><div class="pk-item-preview">'+(dd.impact||'')+'</div><div class="pk-item-features">'+dd.features.slice(0,3).map(function(f){return '<span class="pk-item-feat-tag">'+f+'</span>';}).join('')+'</div></div></div>';}).join('');var co=pkSel.has('__custom__');html+='<div class="pk-item '+(co?'on':'')+'" onclick="togPk(\'__custom__\')" style="border-style:dashed"><div class="ck">'+(co?'V':'')+'</div><div class="pk-item-content"><div class="pk-item-name">+ Custom Goal</div></div></div>';E('pkList').innerHTML=html;}
+function filterPicker(){renderPickerItems(E('pkSearch').value);}
+function togPk(key){if(pkSel.has(key))pkSel.delete(key);else pkSel.add(key);renderPickerItems(E('pkSearch').value);updatePickerCount();}
+function updatePickerCount(){E('pkSelCount').textContent=pkSel.size;}
+function closePk(){E('ov').classList.remove('open');}
+function confirmPk(){var d=getIndData();if(!d)return;var g=d.goals;pkSel.forEach(function(key){if(key==='__custom__'){rows.push({goal:'',features:[{text:'',link:''}],impact:'',challenge:'',note:''});}else if(g[key]){rows.push({goal:key,features:g[key].features.map(function(f){return{text:f,link:autoLink(f)};}),impact:g[key].impact||'',challenge:'',note:''});}});closePk();render();updateBadges();roiInputs={};renderROIQuestions();computeROI();autoSave();}
+function onDragStart(e,i){dragIdx=i;e.dataTransfer.effectAllowed='move';e.target.closest('.dc-row').classList.add('dragging');}
+function onDragEnd(){dragIdx=null;document.querySelectorAll('.dc-row').forEach(function(r){r.classList.remove('dragging','drag-over-top','drag-over-bottom');});}
+function onDragOver(e,i){e.preventDefault();var row=e.target.closest('.dc-row');if(!row)return;var rect=row.getBoundingClientRect();document.querySelectorAll('.dc-row').forEach(function(r){r.classList.remove('drag-over-top','drag-over-bottom');});if(e.clientY<rect.top+rect.height/2)row.classList.add('drag-over-top');else row.classList.add('drag-over-bottom');}
+function onDrop(e,i){e.preventDefault();if(dragIdx===null||dragIdx===i)return;var row=e.target.closest('.dc-row');var rect=row.getBoundingClientRect();var t=e.clientY<rect.top+rect.height/2?i:i+1;if(dragIdx<t)t--;var item=rows.splice(dragIdx,1)[0];rows.splice(t,0,item);dragIdx=null;render();autoSave();}
+function moveRow(f,t){if(t<0||t>=rows.length)return;var item=rows.splice(f,1)[0];rows.splice(t,0,item);render();autoSave();}
+function render(){var c=E('chartBody');if(!rows.length){c.innerHTML='<div style="text-align:center;padding:48px 20px;color:var(--text3)">'+(ind?'Click "+ Add Goal Row"':'Select an industry to start')+'</div>';updateBadges();return;}c.innerHTML=rows.map(function(r,i){return '<div class="dc-row" draggable="true" ondragstart="onDragStart(event,'+i+')" ondragend="onDragEnd()" ondragover="onDragOver(event,'+i+')" ondrop="onDrop(event,'+i+')">'+'<div class="drag-handle no-print">||</div>'+'<div class="row-actions no-print">'+(i>0?'<button class="ra-btn ra-up" onclick="moveRow('+i+','+(i-1)+')">^</button>':'')+(i<rows.length-1?'<button class="ra-btn ra-down" onclick="moveRow('+i+','+(i+1)+')">v</button>':'')+'<button class="ra-btn" onclick="rmRow('+i+')">x</button></div>'+'<div class="cell-g"><input class="cg-edit no-print" type="text" value="'+esc(r.goal)+'" oninput="rows['+i+'].goal=this.value;autoSave()" placeholder="Goal..."><div class="cg-text print-only" style="display:none">'+r.goal+'</div><div class="cg-label no-print">In their words</div><input class="cg-input" type="text" placeholder="What they said..." value="'+esc(r.challenge)+'" oninput="rows['+i+'].challenge=this.value;autoSave()"><div class="cg-num">'+String(i+1).padStart(2,'0')+'</div></div>'+'<div class="cell-f"><ul>'+r.features.map(function(f,fi){return '<li><div class="f-wrap"><input class="f-edit no-print" type="text" value="'+esc(f.text||'')+'" oninput="updFeat('+i+','+fi+',\'text\',this.value)" placeholder="Feature..."><button class="f-rm no-print" onclick="rmFeat('+i+','+fi+')">&times;</button></div><input class="f-link no-print" type="text" placeholder="https://..." value="'+esc(f.link||'')+'" oninput="updFeat('+i+','+fi+',\'link\',this.value)"><span class="print-only" style="display:none">'+fmtFeat(f)+'</span></li>';}).join('')+'</ul><button class="f-add no-print" onclick="addFeat('+i+')">+ Feature</button></div>'+'<div class="cell-i"><textarea class="ci-edit no-print" oninput="rows['+i+'].impact=this.value;autoSave()" placeholder="Impact...">'+r.impact+'</textarea><div class="print-only" style="display:none">'+r.impact+'</div></div>'+'<div class="cell-n"><input class="cn-input" type="text" placeholder="Note..." value="'+esc(r.note||'')+'" oninput="rows['+i+'].note=this.value;autoSave()"></div></div>';}).join('');updateBadges();}
+function updFeat(ri,fi,field,val){rows[ri].features[fi][field]=val;autoSave();}
+function rmFeat(ri,fi){rows[ri].features.splice(fi,1);render();autoSave();}
+function addFeat(ri){rows[ri].features.push({text:'',link:''});render();autoSave();}
+function rmRow(i){rows.splice(i,1);render();roiInputs={};renderROIQuestions();computeROI();autoSave();}
+function addStep(){steps.push({action:'',owner:'',date:''});renderSteps();autoSave();}
+function rmStep(i){steps.splice(i,1);renderSteps();autoSave();}
+function updateStep(i,field,val){steps[i][field]=val;autoSave();}
+function renderSteps(){var sb=E('stepsBody');if(!steps.length){sb.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Add next steps</div>';return;}sb.innerHTML=steps.map(function(s,i){return '<div class="ns-row"><div class="ns-num">'+String(i+1).padStart(2,'0')+'</div><div class="ns-fields"><div class="ns-field" style="flex:2"><div class="ns-label">Action</div><input class="ns-input" type="text" placeholder="Follow up..." value="'+esc(s.action)+'" oninput="updateStep('+i+',\'action\',this.value)"></div><div class="ns-field"><div class="ns-label">Owner</div><input class="ns-input" type="text" placeholder="Name" value="'+esc(s.owner)+'" oninput="updateStep('+i+',\'owner\',this.value)"></div><div class="ns-field"><div class="ns-label">Date</div><input class="ns-input" type="text" placeholder="Apr 10" value="'+esc(s.date)+'" oninput="updateStep('+i+',\'date\',this.value)"></div></div><button class="ns-rm no-print" onclick="rmStep('+i+')">&times;</button></div>';}).join('');}
+function resetAll(){if(!confirm('Reset everything?'))return;E('selInd').value='';E('inpBiz').value='';E('inpCon').value='';E('inpDate').value='';E('selTeam').value='';E('inpNote').value='';E('docNote').textContent='';ind='';rows=[];steps=[];roiInputs={};render();renderSteps();refreshHdr();updateBadges();computeROI();renderROIQuestions();localStorage.removeItem('jobber_ap_v2');E('autosaveStatus').textContent='';}
+function showToast(msg){var t=E('valToast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},3500);}
+
+// ═══ PDF EXPORT ═══
+function loadJsPDF(){return new Promise(function(resolve,reject){if(window.jspdf){resolve();return;}var urls=['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'];var i=0;function tryNext(){if(i>=urls.length){reject(new Error('Could not load jsPDF'));return;}var s=document.createElement('script');s.src=urls[i++];s.onload=function(){if(window.jspdf)resolve();else tryNext();};s.onerror=function(){tryNext();};document.head.appendChild(s);}tryNext();});}
+
+function doExport(){
+  var issues=[];if(!ind)issues.push('Select an industry');if(!E('inpBiz').value.trim())issues.push('Business name');if(!E('inpCon').value.trim())issues.push('Contact name');if(!rows.length)issues.push('Add goals');
+  if(issues.length){showToast('Missing: '+issues.join(', '));return;}
+  var btn=E('btnExportPDF');btn.textContent='Generating...';btn.disabled=true;
+  loadJsPDF().then(function(){try{buildPDF();}catch(e){console.error(e);alert('PDF error: '+e.message);}btn.textContent='Download PDF';btn.disabled=false;}).catch(function(e){btn.textContent='Download PDF';btn.disabled=false;alert(e.message);});
+}
+
+function buildPDF(){
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
+  var W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=44,cW=W-2*M,y=0;
+  var NV=[1,41,57],GR=[168,227,0],GD=[130,180,0],GY=[90,105,118],GL=[160,170,178],GX=[215,220,225],BD=[230,233,237],CD=[250,251,252],BK=[20,34,46],WH=[255,255,255],RA=[247,249,251],LB=[5,141,199];
+  function w(t,mw,sz){doc.setFontSize(sz);return doc.splitTextToSize(t||'',mw);}
+  function R(x,yy,ww,h,c){doc.setFillColor(c[0],c[1],c[2]);doc.rect(x,yy,ww,h,'F');}
+  function chk(n){if(y+n>H-44){doc.addPage();y=M;return true;}return false;}
+  function gc(cx,cy,r,num){doc.setDrawColor(GR[0],GR[1],GR[2]);doc.setLineWidth(1.8);doc.setFillColor(255,255,255);doc.circle(cx,cy,r,'FD');doc.setFontSize(r*1.3);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text(String(num),cx,cy+r*0.4,{align:'center'});}
+  var biz=E('inpBiz').value,con=E('inpCon').value,ts=E('selTeam'),tt=ts.value?ts.options[ts.selectedIndex].text:'',d=getIndData(),lb=d?d.label:'',ds=E('inpDate').value||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),note=E('inpNote').value;
+
+  // HEADER
+  R(0,0,W,108,NV);R(0,0,W,4,[0,28,42]);y=50;
+  doc.setFontSize(28);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text(biz?'Action Plan for '+biz:'Action Plan',M,y);
+  y+=18;doc.setFontSize(10);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');doc.text('A tailored roadmap to streamline and grow your '+lb.toLowerCase()+' business',M,y);
+  y+=16;var mp=[];if(lb)mp.push(lb);if(con)mp.push(con);if(tt)mp.push(tt);mp.push(ds);doc.setFontSize(7.5);doc.setTextColor(180,200,210);doc.text(mp.join(' | '),M,y);y=122;
+
+  if(note){var nl=w(note,cW-24,9);var nh=nl.length*13+16;R(M,y,cW,nh,[240,245,248]);R(M,y,3,nh,GR);var ny=y+12;doc.setFontSize(9);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','italic');nl.forEach(function(l){doc.text(l,M+14,ny);ny+=13;});y+=nh+8;}
+
+  // TABLE
+  var cols=[cW*0.24,cW*0.29,cW*0.27,cW*0.20];
+  R(M,y,cW,22,NV);var hx=M;['BUSINESS GOALS','JOBBER FEATURES','IMPACT & VALUE','NOTES'].forEach(function(t,i){doc.setFontSize(7);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text(t,hx+10,y+14);hx+=cols[i];});y+=22;
+
+  rows.forEach(function(r,i){
+    var ie=i%2===1,x0=M,x1=M+cols[0],x2=x1+cols[1],x3=x2+cols[2];
+    var gl=w(r.goal,cols[0]-50,12),cl=r.challenge?w('"'+r.challenge+'"',cols[0]-50,7.5):[];
+    var fws=r.features.map(function(f){var t=f.text||'';return t?{lines:w(t,cols[1]-30,9),text:t,link:f.link||autoLink(t)}:null;}).filter(Boolean);
+    var fh=fws.reduce(function(s,fw){return s+fw.lines.length*12+5;},0);
+    var il=w(r.impact,cols[2]-28,9),ntl=r.note?w(r.note,cols[3]-28,9):[];
+    var rh=Math.max(gl.length*15+(cl.length?cl.length*10+8:0)+28,fh+28,il.length*12+28,ntl.length*12+28,66);
+    chk(rh+2);
+    R(x0,y,cW,rh,ie?RA:WH);R(x1,y,cols[1],rh,ie?[228,238,244]:[236,243,248]);R(x3,y,cols[3],rh,CD);
+    gc(x0+20,y+22,11,i+1);
+    var gy=y+14;doc.setFontSize(12);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');gl.forEach(function(l){doc.text(l,x0+38,gy+10);gy+=15;});
+    if(cl.length){gy+=2;doc.setFontSize(7.5);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','italic');cl.forEach(function(l){doc.text(l,x0+38,gy+7);gy+=10;});}
+    var fy=y+14;fws.forEach(function(fw){doc.setFillColor(GR[0],GR[1],GR[2]);doc.circle(x1+17,fy+6,2,'F');var hl=!!fw.link;doc.setFontSize(9);doc.setTextColor(hl?LB[0]:NV[0],hl?LB[1]:NV[1],hl?LB[2]:NV[2]);doc.setFont('helvetica','normal');fw.lines.forEach(function(l){doc.text(l,x1+24,fy+9);if(hl){var tw=doc.getTextWidth(l);doc.setDrawColor(LB[0],LB[1],LB[2]);doc.setLineWidth(0.4);doc.line(x1+24,fy+10.5,x1+24+tw,fy+10.5);}fy+=12;});if(hl){doc.link(x1+14,fy-fw.lines.length*12,cols[1]-28,fw.lines.length*12,{url:fw.link});}fy+=5;});
+    var iy=y+14;doc.setFontSize(9.5);doc.setTextColor(70,88,100);doc.setFont('helvetica','italic');il.forEach(function(l){doc.text(l,x2+14,iy+9);iy+=12.5;});
+    if(r.note){var ny2=y+14;doc.setFontSize(9);doc.setTextColor(BK[0],BK[1],BK[2]);doc.setFont('helvetica','normal');ntl.forEach(function(l){doc.text(l,x3+14,ny2+9);ny2+=12;});}
+    doc.setDrawColor(BD[0],BD[1],BD[2]);doc.setLineWidth(0.4);doc.line(x0,y+rh,M+cW,y+rh);
+    doc.setDrawColor(GX[0],GX[1],GX[2]);doc.setLineWidth(0.3);[x1,x2,x3].forEach(function(xx){doc.line(xx,y,xx,y+rh);});y+=rh;
+  });
+  R(M,y,cW,2,NV);y+=20;
+
+  // NEXT STEPS
+  if(steps.length&&steps.some(function(s){return s.action;})){
+    chk(50+steps.length*46);R(M,y-4,cW,34,NV);R(M,y-4,5,34,GR);
+    doc.setFontSize(15);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('NEXT STEPS',M+18,y+14);y+=40;
+    steps.forEach(function(s,si){if(!s.action)return;chk(46);var ry=y;R(M,ry,cW,42,si%2===0?WH:RA);gc(M+18,ry+21,12,si+1);
+    var sx=M+42,tw2=cW-42;
+    [[s.action,sx,tw2*0.55,'ACTION'],[s.owner,sx+tw2*0.55,tw2*0.25,'OWNER'],[s.date,sx+tw2*0.80,tw2*0.20,'DATE']].forEach(function(a){doc.setFontSize(7);doc.setTextColor(GL[0],GL[1],GL[2]);doc.setFont('helvetica','bold');doc.text(a[3],a[1],ry+12);doc.setFontSize(11);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','normal');w(a[0]||'',a[2]-8,11).forEach(function(l,li){doc.text(l,a[1],ry+24+li*13);});});
+    y+=42;doc.setDrawColor(BD[0],BD[1],BD[2]);doc.setLineWidth(0.3);doc.line(M,y,M+cW,y);y+=4;});
+    R(M,y,cW,2,GR);y+=10;
+  }
+
+  // ROI PAGE
+  doc.addPage();y=M;R(0,0,W,68,NV);R(0,0,W,4,[0,28,42]);
+  doc.setFontSize(26);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Return on Investment',M,38);
+  doc.setFontSize(11);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');doc.text('Based on the numbers you shared',M,52);y=86;
+
+  // Compute ROI items for PDF
+  var ri=roiInputs;var pdfItems=[];
+  if(ri.adminHrs&&ri.adminRate){var at=ri.adminHrs*ri.adminRate*52;var as=at*0.55;pdfItems.push({cat:'Admin Time',today:ri.adminHrs+' hrs/week ($'+Math.round(at).toLocaleString()+'/yr)',jobber:Math.round(ri.adminHrs*0.45)+' hrs/week ($'+Math.round(at-as).toLocaleString()+'/yr)',save:as});}
+  if(ri.quotesPerWeek&&ri.quoteCloseRate&&ri.avgJobValue){var cw2=ri.quotesPerWeek*(ri.quoteCloseRate/100);var ir=Math.min(ri.quoteCloseRate+12,95);var nw=ri.quotesPerWeek*(ir/100);var er=(nw-cw2)*52*ri.avgJobValue;pdfItems.push({cat:'Quote Conversion',today:Math.round(ri.quoteCloseRate)+'% close rate',jobber:Math.round(ir)+'% with follow-ups',save:er});}
+  if(ri.daysToCollect&&ri.monthlyRevenue){var ci=ri.monthlyRevenue*12*(14/365)*0.05;pdfItems.push({cat:'Payment Speed',today:ri.daysToCollect+' days to collect',jobber:Math.max(ri.daysToCollect-14,1)+' days with digital payment',save:ci});}
+  if(ri.jobsPerDay&&ri.crewCount&&ri.avgJobValue){var ep=ri.jobsPerDay*0.15;var rv=ep*ri.crewCount*250*ri.avgJobValue;pdfItems.push({cat:'Route Efficiency',today:ri.jobsPerDay+' jobs/crew/day',jobber:Math.round((ri.jobsPerDay+ep)*10)/10+' with optimization',save:rv});}
+  if(ri.noShowRate&&ri.avgJobValue&&ri.jobsPerDay&&ri.crewCount){var tj=ri.jobsPerDay*ri.crewCount*250;var rr=tj*(ri.noShowRate/100)*0.5*ri.avgJobValue;pdfItems.push({cat:'Cancellation Recovery',today:ri.noShowRate+'% no-show rate',jobber:Math.round(ri.noShowRate*0.5)+'% with reminders',save:rr});}
+  if(ri.coldQuotePercent&&ri.quotesPerWeek&&ri.avgJobValue){var cr=ri.quotesPerWeek*(ri.coldQuotePercent/100)*0.25*52*ri.avgJobValue;pdfItems.push({cat:'Cold Quote Recovery',today:ri.coldQuotePercent+'% go cold',jobber:Math.round(ri.coldQuotePercent*0.75)+'% with auto follow-ups',save:cr});}
+
+  var pdfTotal=0;pdfItems.forEach(function(it){pdfTotal+=it.save||0;});
+
+  if(pdfItems.length){
+    // Today vs Jobber table
+    var colW=cW/2;
+    R(M,y,colW,24,[253,237,236]);R(M+colW,y,colW,24,[240,255,220]);
+    doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.setTextColor(200,50,50);doc.text('TODAY (WITHOUT JOBBER)',M+14,y+16);
+    doc.setTextColor(GD[0],GD[1],GD[2]);doc.text('WITH JOBBER',M+colW+14,y+16);y+=24;
+
+    pdfItems.forEach(function(it,idx){
+      chk(52);var ry=y;
+      R(M,ry,cW,48,idx%2===0?WH:RA);
+      doc.setFontSize(8);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','bold');doc.text(it.cat.toUpperCase(),M+14,ry+14);doc.text(it.cat.toUpperCase(),M+colW+14,ry+14);
+      doc.setFontSize(13);doc.setFont('helvetica','normal');
+      doc.setTextColor(NV[0],NV[1],NV[2]);doc.text(it.today,M+14,ry+30);
+      doc.setTextColor(GD[0],GD[1],GD[2]);doc.text(it.jobber,M+colW+14,ry+30);
+      doc.setFontSize(9);doc.setTextColor(GD[0],GD[1],GD[2]);doc.setFont('helvetica','bold');doc.text('+$'+Math.round(it.save).toLocaleString(),M+colW+14,ry+42);
+      doc.setDrawColor(BD[0],BD[1],BD[2]);doc.setLineWidth(0.3);doc.line(M,ry+48,M+cW,ry+48);
+      doc.setDrawColor(GX[0],GX[1],GX[2]);doc.line(M+colW,ry,M+colW,ry+48);
+      y+=48;
+    });
+
+    // Total bar
+    y+=6;R(M,y,cW,56,NV);R(M,y,5,56,GR);
+    doc.setFontSize(14);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Estimated Annual Impact',M+18,y+22);
+    doc.setFontSize(10);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('Based on the numbers you shared in our conversation',M+18,y+38);
+    doc.setFontSize(32);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','bold');doc.text('$'+Math.round(pdfTotal).toLocaleString(),W-M-14,y+34,{align:'right'});
+    y+=62;
+
+    var pb=Math.max(1,Math.round(588/pdfTotal*52));
+    doc.setFontSize(9);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','normal');
+    doc.text('Based on your inputs. These are opportunities Jobber can help you capture. Actual results may vary.',M,y);
+  } else {
+    // Generic stats if no ROI inputs
+    doc.setFontSize(18);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text('WHAT OUR MEMBERS ARE SEEING',W/2,y,{align:'center'});y+=24;
+    var stats=[{n:'7+',u:'hrs/week saved'},{n:'4x',u:'faster payments'},{n:'2x',u:'faster quotes'},{n:'29M+',u:'jobs completed'}];
+    var sw=(cW-42)/4;
+    stats.forEach(function(st,si){var cx=M+si*(sw+14);R(cx,y,sw,70,[245,248,250]);R(cx,y,sw,4,GR);doc.setFontSize(28);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text(st.n,cx+sw/2,y+30,{align:'center'});doc.setFontSize(9);doc.setTextColor(GD[0],GD[1],GD[2]);doc.setFont('helvetica','normal');doc.text(st.u,cx+sw/2,y+48,{align:'center'});});
+  }
+
+  // FOOTER
+  var fy=H-36;R(0,fy,W,36,NV);R(0,fy,W,2,GR);doc.setFontSize(8);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('Jobber - Helping people in small business be successful',M,fy+20);doc.setFontSize(8);doc.setTextColor(GR[0],GR[1],GR[2]);doc.text('getjobber.com',W-M,fy+20,{align:'right'});doc.link(W-M-doc.getTextWidth('getjobber.com'),fy+10,doc.getTextWidth('getjobber.com'),14,{url:'https://www.getjobber.com'});
+  doc.save((biz?biz.replace(/[^a-zA-Z0-9 ]/g,'').trim().replace(/\s+/g,'_'):'Prospect')+'_Jobber_Action_Plan.pdf');
+}
+
+// INIT
+refreshHdr();updateBadges();loadSaved();
+window.addEventListener('beforeunload',function(e){if(rows.length>0){e.preventDefault();e.returnValue='';}});
+</script>
+</body>
+</html>
++Math.round(totalSaving).toLocaleString()+'</strong> on the table per year. These are opportunities Jobber can help you capture through automation, better scheduling, faster payments, and professional client communication.';
+}
+
+// ═══ AUTO-SAVE ═══
+function autoSave(){clearTimeout(saveTimer);saveTimer=setTimeout(function(){try{localStorage.setItem('jobber_ap_v2',JSON.stringify({ind:ind,rows:rows,steps:steps,roiInputs:roiInputs,biz:E('inpBiz').value,con:E('inpCon').value,date:E('inpDate').value,team:E('selTeam').value,note:E('inpNote').value}));E('autosaveStatus').textContent='Saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){}},800);}
+function loadSaved(){try{var raw=localStorage.getItem('jobber_ap_v2');if(!raw)return;var s=JSON.parse(raw);if(s.ind){ind=s.ind;E('selInd').value=ind;}if(s.biz)E('inpBiz').value=s.biz;if(s.con)E('inpCon').value=s.con;if(s.date)E('inpDate').value=s.date;if(s.team)E('selTeam').value=s.team;if(s.note){E('inpNote').value=s.note;E('docNote').textContent=s.note;}if(s.roiInputs)roiInputs=s.roiInputs;if(s.rows)rows=s.rows;if(s.steps)steps=s.steps;render();renderSteps();refreshHdr();updateBadges();computeROI();E('autosaveStatus').textContent='Draft restored';}catch(e){}}
+
+function toggleSection(id){E(id).classList.toggle('collapsed');}
+function updateBadges(){var biz=E('inpBiz').value,bp=E('badgeProspect');if(biz){bp.textContent=biz;bp.style.display='inline';}else bp.style.display='none';var bn=E('badgeNote');if(E('inpNote').value){bn.textContent='ok';bn.style.display='inline';}else bn.style.display='none';var bb=E('badgeBuild');if(rows.length){bb.textContent=rows.length+' goal'+(rows.length>1?'s':'');bb.style.display='inline';}else bb.style.display='none';}
+function changeInd(){ind=E('selInd').value;rows=[];steps=[];roiInputs={};render();renderSteps();refreshHdr();updateBadges();computeROI();autoSave();}
+function refreshHdr(){var b=E('inpBiz').value,c=E('inpCon').value,ts=E('selTeam'),tt=ts.value?ts.options[ts.selectedIndex].text:'--',d=getIndData(),lb=d?d.label:'--';E('hTitle').textContent=b?b+' | Custom Action Plan':'Custom Action Plan';E('hSub').textContent=b?'A tailored roadmap to streamline your '+lb.toLowerCase()+' operations with Jobber':'Your tailored roadmap to streamline operations and grow your business with Jobber';E('mInd').textContent=ind?lb:'--';E('mCon').textContent=c||'--';E('mTeam').textContent=ts.value?tt:'--';E('mDate').textContent=E('inpDate').value||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}
+function refreshNote(){E('docNote').textContent=E('inpNote').value;updateBadges();}
+function openPk(){if(!ind){E('secProspect').classList.remove('collapsed');var sel=E('selInd');sel.style.borderColor='#A8E300';sel.style.boxShadow='0 0 0 3px rgba(168,227,0,0.25)';sel.focus();setTimeout(function(){sel.style.borderColor='';sel.style.boxShadow='';},2000);return;}var d=getIndData();if(!d)return;var used={};rows.forEach(function(r){used[r.goal]=1;});pkAvail=Object.keys(d.goals).filter(function(g){return!used[g];});pkSel=new Set();E('pkSub').textContent='Choose goals for '+d.label;E('pkSearch').value='';renderPickerItems();updatePickerCount();E('ov').classList.add('open');setTimeout(function(){E('pkSearch').focus();},100);}
+function renderPickerItems(filter){var fl=(filter||'').toLowerCase();var d=getIndData();if(!d)return;var g=d.goals;var html=pkAvail.filter(function(k){if(!fl)return true;var dd=g[k];return k.toLowerCase().indexOf(fl)!==-1||(dd.impact||'').toLowerCase().indexOf(fl)!==-1||dd.features.some(function(f){return f.toLowerCase().indexOf(fl)!==-1;});}).map(function(k){var dd=g[k];var isOn=pkSel.has(k);return '<div class="pk-item '+(isOn?'on':'')+'" onclick="togPk(\''+k.replace(/'/g,"\\'")+'\')">'+'<div class="ck">'+(isOn?'V':'')+'</div><div class="pk-item-content"><div class="pk-item-name">'+k+'</div><div class="pk-item-preview">'+(dd.impact||'')+'</div><div class="pk-item-features">'+dd.features.slice(0,3).map(function(f){return '<span class="pk-item-feat-tag">'+f+'</span>';}).join('')+'</div></div></div>';}).join('');var co=pkSel.has('__custom__');html+='<div class="pk-item '+(co?'on':'')+'" onclick="togPk(\'__custom__\')" style="border-style:dashed"><div class="ck">'+(co?'V':'')+'</div><div class="pk-item-content"><div class="pk-item-name">+ Custom Goal</div></div></div>';E('pkList').innerHTML=html;}
 function filterPicker(){renderPickerItems(E('pkSearch').value);}
 function togPk(key){if(pkSel.has(key))pkSel.delete(key);else pkSel.add(key);renderPickerItems(E('pkSearch').value);updatePickerCount();}
 function updatePickerCount(){E('pkSelCount').textContent=pkSel.size;}
@@ -263,8 +616,7 @@ function onDragStart(e,i){dragIdx=i;e.dataTransfer.effectAllowed='move';e.target
 function onDragEnd(){dragIdx=null;document.querySelectorAll('.dc-row').forEach(function(r){r.classList.remove('dragging','drag-over-top','drag-over-bottom');});}
 function onDragOver(e,i){e.preventDefault();var row=e.target.closest('.dc-row');if(!row)return;var rect=row.getBoundingClientRect();document.querySelectorAll('.dc-row').forEach(function(r){r.classList.remove('drag-over-top','drag-over-bottom');});if(e.clientY<rect.top+rect.height/2)row.classList.add('drag-over-top');else row.classList.add('drag-over-bottom');}
 function onDrop(e,i){e.preventDefault();if(dragIdx===null||dragIdx===i)return;var row=e.target.closest('.dc-row');var rect=row.getBoundingClientRect();var t=e.clientY<rect.top+rect.height/2?i:i+1;if(dragIdx<t)t--;var item=rows.splice(dragIdx,1)[0];rows.splice(t,0,item);dragIdx=null;render();autoSave();}
-function moveRow(from,to){if(to<0||to>=rows.length)return;var item=rows.splice(from,1)[0];rows.splice(to,0,item);render();autoSave();}
-function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function moveRow(f,t){if(t<0||t>=rows.length)return;var item=rows.splice(f,1)[0];rows.splice(t,0,item);render();autoSave();}
 function render(){var c=E('chartBody');if(!rows.length){c.innerHTML='<div style="text-align:center;padding:48px 20px;color:var(--text3)">'+(ind?'Click "+ Add Goal Row"':'Select an industry to start')+'</div>';updateBadges();return;}c.innerHTML=rows.map(function(r,i){return '<div class="dc-row" draggable="true" ondragstart="onDragStart(event,'+i+')" ondragend="onDragEnd()" ondragover="onDragOver(event,'+i+')" ondrop="onDrop(event,'+i+')">'+'<div class="drag-handle no-print">||</div>'+'<div class="row-actions no-print">'+(i>0?'<button class="ra-btn ra-up" onclick="moveRow('+i+','+(i-1)+')">^</button>':'')+(i<rows.length-1?'<button class="ra-btn ra-down" onclick="moveRow('+i+','+(i+1)+')">v</button>':'')+'<button class="ra-btn" onclick="rmRow('+i+')">x</button></div>'+'<div class="cell-g"><input class="cg-edit no-print" type="text" value="'+esc(r.goal)+'" oninput="rows['+i+'].goal=this.value;autoSave()" placeholder="Goal..."><div class="cg-text print-only" style="display:none">'+r.goal+'</div><div class="cg-label no-print">In their words</div><input class="cg-input" type="text" placeholder="What they said..." value="'+esc(r.challenge)+'" oninput="rows['+i+'].challenge=this.value;autoSave()"><div class="cg-num">'+String(i+1).padStart(2,'0')+'</div></div>'+'<div class="cell-f"><ul>'+r.features.map(function(f,fi){return '<li><div class="f-wrap"><input class="f-edit no-print" type="text" value="'+esc(f.text||'')+'" oninput="updFeat('+i+','+fi+',\'text\',this.value)" placeholder="Feature..."><button class="f-rm no-print" onclick="rmFeat('+i+','+fi+')">&times;</button></div><input class="f-link no-print" type="text" placeholder="https://..." value="'+esc(f.link||'')+'" oninput="updFeat('+i+','+fi+',\'link\',this.value)"><span class="print-only" style="display:none">'+fmtFeat(f)+'</span></li>';}).join('')+'</ul><button class="f-add no-print" onclick="addFeat('+i+')">+ Feature</button></div>'+'<div class="cell-i"><textarea class="ci-edit no-print" oninput="rows['+i+'].impact=this.value;autoSave()" placeholder="Impact...">'+r.impact+'</textarea><div class="print-only" style="display:none">'+r.impact+'</div></div>'+'<div class="cell-n"><input class="cn-input" type="text" placeholder="Note..." value="'+esc(r.note||'')+'" oninput="rows['+i+'].note=this.value;autoSave()"></div></div>';}).join('');updateBadges();}
 function updFeat(ri,fi,field,val){rows[ri].features[fi][field]=val;autoSave();}
 function rmFeat(ri,fi){rows[ri].features.splice(fi,1);render();autoSave();}
@@ -273,139 +625,135 @@ function rmRow(i){rows.splice(i,1);render();computeROI();autoSave();}
 function addStep(){steps.push({action:'',owner:'',date:''});renderSteps();autoSave();}
 function rmStep(i){steps.splice(i,1);renderSteps();autoSave();}
 function updateStep(i,field,val){steps[i][field]=val;autoSave();}
-function renderSteps(){var sb=E('stepsBody');if(!steps.length){sb.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Add next steps</div>';return;}sb.innerHTML=steps.map(function(s,i){return '<div class="ns-row"><div class="ns-num">'+String(i+1).padStart(2,'0')+'</div><div class="ns-fields"><div class="ns-field" style="flex:2"><div class="ns-label">Action</div><input class="ns-input" type="text" placeholder="e.g. Follow up" value="'+esc(s.action)+'" oninput="updateStep('+i+',\'action\',this.value)"></div><div class="ns-field"><div class="ns-label">Owner</div><input class="ns-input" type="text" placeholder="e.g. Naji" value="'+esc(s.owner)+'" oninput="updateStep('+i+',\'owner\',this.value)"></div><div class="ns-field"><div class="ns-label">Date</div><input class="ns-input" type="text" placeholder="e.g. April 10" value="'+esc(s.date)+'" oninput="updateStep('+i+',\'date\',this.value)"></div></div><button class="ns-rm no-print" onclick="rmStep('+i+')">&times;</button></div>';}).join('');}
-function resetAll(){if(!confirm('Reset everything?'))return;E('selInd').value='';E('inpBiz').value='';E('inpCon').value='';E('inpDate').value='';E('selTeam').value='';E('inpNote').value='';E('docNote').textContent='';E('inpCrew').value='';E('inpJobs').value='';E('inpAvgJob').value='';ind='';rows=[];steps=[];render();renderSteps();refreshHdr();updateBadges();computeROI();localStorage.removeItem('jobber_ap_draft');E('autosaveStatus').textContent='';}
+function renderSteps(){var sb=E('stepsBody');if(!steps.length){sb.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Add next steps</div>';return;}sb.innerHTML=steps.map(function(s,i){return '<div class="ns-row"><div class="ns-num">'+String(i+1).padStart(2,'0')+'</div><div class="ns-fields"><div class="ns-field" style="flex:2"><div class="ns-label">Action</div><input class="ns-input" type="text" placeholder="Follow up..." value="'+esc(s.action)+'" oninput="updateStep('+i+',\'action\',this.value)"></div><div class="ns-field"><div class="ns-label">Owner</div><input class="ns-input" type="text" placeholder="Name" value="'+esc(s.owner)+'" oninput="updateStep('+i+',\'owner\',this.value)"></div><div class="ns-field"><div class="ns-label">Date</div><input class="ns-input" type="text" placeholder="Apr 10" value="'+esc(s.date)+'" oninput="updateStep('+i+',\'date\',this.value)"></div></div><button class="ns-rm no-print" onclick="rmStep('+i+')">&times;</button></div>';}).join('');}
+function resetAll(){if(!confirm('Reset everything?'))return;E('selInd').value='';E('inpBiz').value='';E('inpCon').value='';E('inpDate').value='';E('selTeam').value='';E('inpNote').value='';E('docNote').textContent='';ind='';rows=[];steps=[];roiInputs={};render();renderSteps();refreshHdr();updateBadges();computeROI();renderROIQuestions();localStorage.removeItem('jobber_ap_v2');E('autosaveStatus').textContent='';}
 function showToast(msg){var t=E('valToast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},3500);}
-function computeROI(){var crew=parseInt(E('inpCrew').value)||0,jobs=parseInt(E('inpJobs').value)||0,avg=parseInt(E('inpAvgJob').value)||0;var sec=E('roiSection'),sb=E('roiSidebarPreview');if(!crew||!jobs||!avg||!rows.length){sec.style.display='none';sb.style.display='none';return;}var gn=rows.map(function(r){return(r.goal||'').toLowerCase();});var matched=[];for(var key in ROI_MAP){var cfg=ROI_MAP[key];if(cfg.match.some(function(kw){return gn.some(function(g){return g.indexOf(kw)!==-1;});}))matched.push(key);}if(matched.indexOf('admin')===-1&&rows.length>=2)matched.push('admin');if(!matched.length)matched.push('admin');var results=matched.map(function(k){var cfg=ROI_MAP[k];var calc=cfg.calc(crew,jobs,avg);return{icon:cfg.icon,label:cfg.label,value:calc.value,detail:calc.detail,assumption:calc.assumption,tag:calc.tag,isNotDollar:calc.isNotDollar,dollarValue:calc.dollarValue};});var total=0;results.forEach(function(r){if(r.isNotDollar)total+=(r.dollarValue||0);else total+=parseInt(r.value.replace(/[^0-9]/g,''))||0;});E('roiSubtitle').textContent=crew+' crew x '+jobs+' jobs/week x $'+avg+' avg = $'+(jobs*avg*52).toLocaleString()+'/year';E('roiTotalNum').textContent='$'+total.toLocaleString();var grid=E('roiGrid');grid.innerHTML=results.map(function(r){return '<div class="roi-card"><div class="rc-icon">'+r.icon+'</div><div class="rc-value '+(r.isNotDollar?'':'green')+'">'+r.value+'</div><div class="rc-label">'+r.label+'</div><div class="rc-detail">'+r.detail+'</div><div class="rc-tag">'+r.tag+'</div></div>';}).join('');if(results.length%2!==0)grid.innerHTML+='<div class="roi-card" style="background:var(--card)"></div>';E('roiAssumptions').innerHTML='<strong>Assumptions:</strong> '+results.map(function(r){return r.assumption;}).join(' | ')+' | Estimates based on industry averages.';sec.style.display='block';sb.style.display='block';E('roiSidebarTotal').textContent='$'+total.toLocaleString();}
 
-// PDF EXPORT
+// ═══ PDF EXPORT ═══
 function loadJsPDF(){return new Promise(function(resolve,reject){if(window.jspdf){resolve();return;}var urls=['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'];var i=0;function tryNext(){if(i>=urls.length){reject(new Error('Could not load jsPDF'));return;}var s=document.createElement('script');s.src=urls[i++];s.onload=function(){if(window.jspdf)resolve();else tryNext();};s.onerror=function(){tryNext();};document.head.appendChild(s);}tryNext();});}
 
 function doExport(){
-  var issues=[];
-  if(!ind)issues.push('Select an industry');
-  if(!E('inpBiz').value.trim())issues.push('Enter business name');
-  if(!E('inpCon').value.trim())issues.push('Enter contact name');
-  if(!rows.length)issues.push('Add at least one goal');
-  if(issues.length){showToast('Before exporting: '+issues.join(', '));return;}
+  var issues=[];if(!ind)issues.push('Select an industry');if(!E('inpBiz').value.trim())issues.push('Business name');if(!E('inpCon').value.trim())issues.push('Contact name');if(!rows.length)issues.push('Add goals');
+  if(issues.length){showToast('Missing: '+issues.join(', '));return;}
   var btn=E('btnExportPDF');btn.textContent='Generating...';btn.disabled=true;
-  loadJsPDF().then(function(){
-    try{buildPDF();}catch(e){console.error(e);alert('PDF error: '+e.message);}
-    btn.textContent='Download PDF';btn.disabled=false;
-  }).catch(function(e){btn.textContent='Download PDF';btn.disabled=false;alert(e.message);});
+  loadJsPDF().then(function(){try{buildPDF();}catch(e){console.error(e);alert('PDF error: '+e.message);}btn.textContent='Download PDF';btn.disabled=false;}).catch(function(e){btn.textContent='Download PDF';btn.disabled=false;alert(e.message);});
 }
 
 function buildPDF(){
   var jsPDF=window.jspdf.jsPDF;
   var doc=new jsPDF({orientation:'landscape',unit:'pt',format:'letter'});
-  var W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
-  var M=44,cW=W-2*M,y=0;
-  var NAVY=[1,41,57],GREEN=[168,227,0],GREEN_DK=[130,180,0],GRAY=[90,105,118],GRAY_LT=[160,170,178],GRAY_XLT=[215,220,225],BDR=[230,233,237],CARD=[250,251,252],BLACK=[20,34,46],WHITE=[255,255,255],ROW_ALT=[247,249,251],LINK_BLUE=[5,141,199];
-  function wrap(t,mw,sz){doc.setFontSize(sz);return doc.splitTextToSize(t||'',mw);}
-  function R(x,yy,w,h,c){doc.setFillColor(c[0],c[1],c[2]);doc.rect(x,yy,w,h,'F');}
+  var W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=44,cW=W-2*M,y=0;
+  var NV=[1,41,57],GR=[168,227,0],GD=[130,180,0],GY=[90,105,118],GL=[160,170,178],GX=[215,220,225],BD=[230,233,237],CD=[250,251,252],BK=[20,34,46],WH=[255,255,255],RA=[247,249,251],LB=[5,141,199];
+  function w(t,mw,sz){doc.setFontSize(sz);return doc.splitTextToSize(t||'',mw);}
+  function R(x,yy,ww,h,c){doc.setFillColor(c[0],c[1],c[2]);doc.rect(x,yy,ww,h,'F');}
   function chk(n){if(y+n>H-44){doc.addPage();y=M;return true;}return false;}
-  function gc(cx,cy,r,num){doc.setDrawColor(GREEN[0],GREEN[1],GREEN[2]);doc.setLineWidth(1.8);doc.setFillColor(255,255,255);doc.circle(cx,cy,r,'FD');doc.setFontSize(r*1.3);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','bold');doc.text(String(num),cx,cy+r*0.4,{align:'center'});}
-  var biz=E('inpBiz').value,con=E('inpCon').value,ts=E('selTeam'),teamTxt=ts.value?ts.options[ts.selectedIndex].text:'',d=getIndData(),indLabel=d?d.label:'',dateStr=E('inpDate').value||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),note=E('inpNote').value;
+  function gc(cx,cy,r,num){doc.setDrawColor(GR[0],GR[1],GR[2]);doc.setLineWidth(1.8);doc.setFillColor(255,255,255);doc.circle(cx,cy,r,'FD');doc.setFontSize(r*1.3);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text(String(num),cx,cy+r*0.4,{align:'center'});}
+  var biz=E('inpBiz').value,con=E('inpCon').value,ts=E('selTeam'),tt=ts.value?ts.options[ts.selectedIndex].text:'',d=getIndData(),lb=d?d.label:'',ds=E('inpDate').value||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),note=E('inpNote').value;
 
   // HEADER
-  R(0,0,W,108,NAVY);R(0,0,W,4,[0,28,42]);
-  y=50;doc.setFontSize(28);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
-  doc.text(biz?'Action Plan for '+biz:'Your Action Plan',M,y);
-  y+=18;doc.setFontSize(10);doc.setTextColor(168,227,0);doc.setFont('helvetica','normal');
-  doc.text(biz?'A tailored roadmap to streamline and grow your '+indLabel.toLowerCase()+' business':'A tailored roadmap to grow your business',M,y);
-  y+=16;var mp=[];if(indLabel)mp.push(indLabel);if(con)mp.push(con);if(teamTxt)mp.push(teamTxt);mp.push(dateStr);
-  doc.setFontSize(7.5);doc.setTextColor(180,200,210);doc.text(mp.join('  |  '),M,y);
-  y=122;
+  R(0,0,W,108,NV);R(0,0,W,4,[0,28,42]);y=50;
+  doc.setFontSize(28);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text(biz?'Action Plan for '+biz:'Action Plan',M,y);
+  y+=18;doc.setFontSize(10);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');doc.text('A tailored roadmap to streamline and grow your '+lb.toLowerCase()+' business',M,y);
+  y+=16;var mp=[];if(lb)mp.push(lb);if(con)mp.push(con);if(tt)mp.push(tt);mp.push(ds);doc.setFontSize(7.5);doc.setTextColor(180,200,210);doc.text(mp.join(' | '),M,y);y=122;
 
-  // NOTE
-  if(note){var nl=wrap(note,cW-24,9);var nh=nl.length*13+16;R(M,y,cW,nh,[240,245,248]);R(M,y,3,nh,GREEN);var ny2=y+12;doc.setFontSize(9);doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);doc.setFont('helvetica','italic');nl.forEach(function(l){doc.text(l,M+14,ny2);ny2+=13;});y+=nh+8;}
+  if(note){var nl=w(note,cW-24,9);var nh=nl.length*13+16;R(M,y,cW,nh,[240,245,248]);R(M,y,3,nh,GR);var ny=y+12;doc.setFontSize(9);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','italic');nl.forEach(function(l){doc.text(l,M+14,ny);ny+=13;});y+=nh+8;}
 
   // TABLE
   var cols=[cW*0.24,cW*0.29,cW*0.27,cW*0.20];
-  R(M,y,cW,22,NAVY);var hx=M;
-  ['BUSINESS GOALS','JOBBER FEATURES','IMPACT & VALUE','NOTES'].forEach(function(t,hi){doc.setFontSize(7);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text(t,hx+10,y+14);hx+=cols[hi];});
-  y+=22;var P=14;
+  R(M,y,cW,22,NV);var hx=M;['BUSINESS GOALS','JOBBER FEATURES','IMPACT & VALUE','NOTES'].forEach(function(t,i){doc.setFontSize(7);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text(t,hx+10,y+14);hx+=cols[i];});y+=22;
 
   rows.forEach(function(r,i){
-    var isEven=i%2===1;var x0=M,x1=M+cols[0],x2=x1+cols[1],x3=x2+cols[2];
-    var gl=wrap(r.goal,cols[0]-P-36,12);
-    var cl=r.challenge?wrap('"'+r.challenge+'"',cols[0]-P-36,7.5):[];
-    var fws=r.features.map(function(f){var t=f.text||'';if(!t)return null;return{lines:wrap(t,cols[1]-2*P-8,9),text:t,link:f.link||autoLink(t)};}).filter(Boolean);
+    var ie=i%2===1,x0=M,x1=M+cols[0],x2=x1+cols[1],x3=x2+cols[2];
+    var gl=w(r.goal,cols[0]-50,12),cl=r.challenge?w('"'+r.challenge+'"',cols[0]-50,7.5):[];
+    var fws=r.features.map(function(f){var t=f.text||'';return t?{lines:w(t,cols[1]-30,9),text:t,link:f.link||autoLink(t)}:null;}).filter(Boolean);
     var fh=fws.reduce(function(s,fw){return s+fw.lines.length*12+5;},0);
-    var il=wrap(r.impact,cols[2]-2*P,9);
-    var ntl=r.note?wrap(r.note,cols[3]-2*P,9):[];
-    var gh=gl.length*15+(cl.length?cl.length*10+8:0)+2*P;
-    var rh=Math.max(gh,fh+2*P,il.length*12+2*P,ntl.length*12+2*P,66);
+    var il=w(r.impact,cols[2]-28,9),ntl=r.note?w(r.note,cols[3]-28,9):[];
+    var rh=Math.max(gl.length*15+(cl.length?cl.length*10+8:0)+28,fh+28,il.length*12+28,ntl.length*12+28,66);
     chk(rh+2);
-    R(x0,y,cW,rh,isEven?ROW_ALT:WHITE);R(x1,y,cols[1],rh,isEven?[228,238,244]:[236,243,248]);R(x3,y,cols[3],rh,CARD);
+    R(x0,y,cW,rh,ie?RA:WH);R(x1,y,cols[1],rh,ie?[228,238,244]:[236,243,248]);R(x3,y,cols[3],rh,CD);
     gc(x0+20,y+22,11,i+1);
-    var gy=y+P;doc.setFontSize(12);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','bold');
-    gl.forEach(function(l){doc.text(l,x0+38,gy+10);gy+=15;});
-    if(cl.length){gy+=2;doc.setFontSize(7.5);doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);doc.setFont('helvetica','italic');cl.forEach(function(l){doc.text(l,x0+38,gy+7);gy+=10;});}
-    var fy=y+P;fws.forEach(function(fw){doc.setFillColor(GREEN[0],GREEN[1],GREEN[2]);doc.circle(x1+P+3,fy+6,2,'F');var hasLink=!!fw.link;doc.setFontSize(9);doc.setTextColor(hasLink?LINK_BLUE[0]:NAVY[0],hasLink?LINK_BLUE[1]:NAVY[1],hasLink?LINK_BLUE[2]:NAVY[2]);doc.setFont('helvetica','normal');fw.lines.forEach(function(l){doc.text(l,x1+P+10,fy+9);if(hasLink){var tw=doc.getTextWidth(l);doc.setDrawColor(LINK_BLUE[0],LINK_BLUE[1],LINK_BLUE[2]);doc.setLineWidth(0.4);doc.line(x1+P+10,fy+10.5,x1+P+10+tw,fy+10.5);}fy+=12;});if(hasLink){var lh=fw.lines.length*12;doc.link(x1+P,fy-lh,cols[1]-2*P,lh,{url:fw.link});}fy+=5;});
-    var iy=y+P;doc.setFontSize(9.5);doc.setTextColor(70,88,100);doc.setFont('helvetica','italic');il.forEach(function(l){doc.text(l,x2+P,iy+9);iy+=12.5;});
-    if(r.note){var ny3=y+P;doc.setFontSize(9);doc.setTextColor(BLACK[0],BLACK[1],BLACK[2]);doc.setFont('helvetica','normal');ntl.forEach(function(l){doc.text(l,x3+P,ny3+9);ny3+=12;});}
-    doc.setDrawColor(BDR[0],BDR[1],BDR[2]);doc.setLineWidth(0.4);doc.line(x0,y+rh,M+cW,y+rh);
-    doc.setDrawColor(GRAY_XLT[0],GRAY_XLT[1],GRAY_XLT[2]);doc.setLineWidth(0.3);[x1,x2,x3].forEach(function(xx){doc.line(xx,y,xx,y+rh);});
-    y+=rh;
+    var gy=y+14;doc.setFontSize(12);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');gl.forEach(function(l){doc.text(l,x0+38,gy+10);gy+=15;});
+    if(cl.length){gy+=2;doc.setFontSize(7.5);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','italic');cl.forEach(function(l){doc.text(l,x0+38,gy+7);gy+=10;});}
+    var fy=y+14;fws.forEach(function(fw){doc.setFillColor(GR[0],GR[1],GR[2]);doc.circle(x1+17,fy+6,2,'F');var hl=!!fw.link;doc.setFontSize(9);doc.setTextColor(hl?LB[0]:NV[0],hl?LB[1]:NV[1],hl?LB[2]:NV[2]);doc.setFont('helvetica','normal');fw.lines.forEach(function(l){doc.text(l,x1+24,fy+9);if(hl){var tw=doc.getTextWidth(l);doc.setDrawColor(LB[0],LB[1],LB[2]);doc.setLineWidth(0.4);doc.line(x1+24,fy+10.5,x1+24+tw,fy+10.5);}fy+=12;});if(hl){doc.link(x1+14,fy-fw.lines.length*12,cols[1]-28,fw.lines.length*12,{url:fw.link});}fy+=5;});
+    var iy=y+14;doc.setFontSize(9.5);doc.setTextColor(70,88,100);doc.setFont('helvetica','italic');il.forEach(function(l){doc.text(l,x2+14,iy+9);iy+=12.5;});
+    if(r.note){var ny2=y+14;doc.setFontSize(9);doc.setTextColor(BK[0],BK[1],BK[2]);doc.setFont('helvetica','normal');ntl.forEach(function(l){doc.text(l,x3+14,ny2+9);ny2+=12;});}
+    doc.setDrawColor(BD[0],BD[1],BD[2]);doc.setLineWidth(0.4);doc.line(x0,y+rh,M+cW,y+rh);
+    doc.setDrawColor(GX[0],GX[1],GX[2]);doc.setLineWidth(0.3);[x1,x2,x3].forEach(function(xx){doc.line(xx,y,xx,y+rh);});y+=rh;
   });
-  R(M,y,cW,2,NAVY);y+=20;
+  R(M,y,cW,2,NV);y+=20;
 
   // NEXT STEPS
   if(steps.length&&steps.some(function(s){return s.action;})){
-    chk(50+steps.length*46);R(M,y-4,cW,34,NAVY);R(M,y-4,5,34,GREEN);
+    chk(50+steps.length*46);R(M,y-4,cW,34,NV);R(M,y-4,5,34,GR);
     doc.setFontSize(15);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('NEXT STEPS',M+18,y+14);y+=40;
-    steps.forEach(function(s,si){if(!s.action)return;chk(46);var ry=y;R(M,ry,cW,42,si%2===0?WHITE:ROW_ALT);gc(M+18,ry+21,12,si+1);
+    steps.forEach(function(s,si){if(!s.action)return;chk(46);var ry=y;R(M,ry,cW,42,si%2===0?WH:RA);gc(M+18,ry+21,12,si+1);
     var sx=M+42,tw2=cW-42;
-    [[s.action,sx,tw2*0.55,'ACTION'],[s.owner,sx+tw2*0.55,tw2*0.25,'OWNER'],[s.date,sx+tw2*0.80,tw2*0.20,'DATE']].forEach(function(a){doc.setFontSize(7);doc.setTextColor(GRAY_LT[0],GRAY_LT[1],GRAY_LT[2]);doc.setFont('helvetica','bold');doc.text(a[3],a[1],ry+12);doc.setFontSize(11);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','normal');wrap(a[0]||'',a[2]-8,11).forEach(function(l,li){doc.text(l,a[1],ry+24+li*13);});});
-    y+=42;doc.setDrawColor(BDR[0],BDR[1],BDR[2]);doc.setLineWidth(0.3);doc.line(M,y,M+cW,y);y+=4;});
-    R(M,y,cW,2,GREEN);y+=10;
+    [[s.action,sx,tw2*0.55,'ACTION'],[s.owner,sx+tw2*0.55,tw2*0.25,'OWNER'],[s.date,sx+tw2*0.80,tw2*0.20,'DATE']].forEach(function(a){doc.setFontSize(7);doc.setTextColor(GL[0],GL[1],GL[2]);doc.setFont('helvetica','bold');doc.text(a[3],a[1],ry+12);doc.setFontSize(11);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','normal');w(a[0]||'',a[2]-8,11).forEach(function(l,li){doc.text(l,a[1],ry+24+li*13);});});
+    y+=42;doc.setDrawColor(BD[0],BD[1],BD[2]);doc.setLineWidth(0.3);doc.line(M,y,M+cW,y);y+=4;});
+    R(M,y,cW,2,GR);y+=10;
   }
 
   // ROI PAGE
-  var rc=parseInt(E('inpCrew').value)||0,rj=parseInt(E('inpJobs').value)||0,ra=parseInt(E('inpAvgJob').value)||0;
-  doc.addPage();y=M;R(0,0,W,68,NAVY);R(0,0,W,4,[0,28,42]);
-  doc.setFontSize(26);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Why Jobber?',M,38);
-  doc.setFontSize(11);doc.setTextColor(168,227,0);doc.setFont('helvetica','normal');doc.text('Real results from businesses like yours',M,52);y=92;
-  doc.setFontSize(18);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','bold');doc.text('WHAT OUR MEMBERS ARE SEEING',W/2,y,{align:'center'});
-  var hw=doc.getTextWidth('WHAT OUR MEMBERS ARE SEEING');doc.setDrawColor(168,227,0);doc.setLineWidth(2.5);doc.line(W/2-hw/2,y+4,W/2+hw/2,y+4);y+=18;
-  var stats=[{n:'7+',u:'hrs/week',d:'saved on admin'},{n:'4x',u:'faster',d:'payments vs checks'},{n:'2x',u:'faster quotes',d:'with online approval'},{n:'29M+',u:'jobs',d:'completed on Jobber'}];
-  var cg2=14,cw2=(cW-3*cg2)/4,ch2=80;
-  stats.forEach(function(st,si){var cx=M+si*(cw2+cg2);R(cx,y,cw2,ch2,[245,248,250]);R(cx,y,cw2,4,GREEN);doc.setFontSize(32);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','bold');doc.text(st.n,cx+cw2/2,y+30,{align:'center'});doc.setFontSize(10);doc.setTextColor(GREEN_DK[0],GREEN_DK[1],GREEN_DK[2]);doc.setFont('helvetica','bold');doc.text(st.u,cx+cw2/2,y+44,{align:'center'});doc.setFontSize(8);doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);doc.setFont('helvetica','normal');doc.text(st.d,cx+cw2/2,y+58,{align:'center'});});
-  y+=ch2+14;
+  doc.addPage();y=M;R(0,0,W,68,NV);R(0,0,W,4,[0,28,42]);
+  doc.setFontSize(26);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Return on Investment',M,38);
+  doc.setFontSize(11);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');doc.text('Based on the numbers you shared',M,52);y=86;
 
-  // PERSONALIZED ROI
-  if(rc&&rj&&ra&&rows.length){
-    var gn=rows.map(function(r){return(r.goal||'').toLowerCase();});var matched2=[];
-    for(var key in ROI_MAP){var cfg=ROI_MAP[key];if(cfg.match.some(function(kw){return gn.some(function(g){return g.indexOf(kw)!==-1;});}))matched2.push(key);}
-    if(matched2.indexOf('admin')===-1&&rows.length>=2)matched2.push('admin');if(!matched2.length)matched2.push('admin');
-    var res=matched2.map(function(k){var cfg=ROI_MAP[k];var calc=cfg.calc(rc,rj,ra);return{label:cfg.label,value:calc.value,detail:calc.detail,tag:calc.tag,isNotDollar:calc.isNotDollar,dollarValue:calc.dollarValue};});
-    var tot=0;res.forEach(function(r){if(r.isNotDollar)tot+=(r.dollarValue||0);else tot+=parseInt(r.value.replace(/[^0-9]/g,''))||0;});
-    var ar=rj*ra*52;
-    R(M,y,cW,36,NAVY);doc.setFontSize(13);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('YOUR ESTIMATED ROI WITH JOBBER',M+14,y+16);
-    doc.setFontSize(9);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text(rc+' crew x '+rj+' jobs/week x $'+ra+' avg = $'+ar.toLocaleString()+'/year revenue',M+14,y+28);y+=42;
-    res.forEach(function(ri,idx){chk(48);var ry=y;R(M,ry,cW,44,idx%2===0?WHITE:ROW_ALT);gc(M+20,ry+22,11,idx+1);
-    doc.setFontSize(12);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','bold');doc.text(ri.label,M+42,ry+16);
-    doc.setFontSize(9);doc.setTextColor(GRAY[0],GRAY[1],GRAY[2]);doc.setFont('helvetica','normal');doc.text(ri.detail,M+42,ry+29);
-    doc.setFontSize(16);doc.setTextColor(GREEN_DK[0],GREEN_DK[1],GREEN_DK[2]);doc.setFont('helvetica','bold');doc.text(ri.value,W-M-8,ry+18,{align:'right'});
-    doc.setFontSize(8);doc.setTextColor(GRAY_LT[0],GRAY_LT[1],GRAY_LT[2]);doc.setFont('helvetica','normal');doc.text(ri.tag,W-M-8,ry+32,{align:'right'});
-    doc.setDrawColor(BDR[0],BDR[1],BDR[2]);doc.setLineWidth(0.3);doc.line(M,ry+44,M+cW,ry+44);y+=44;});
-    y+=4;R(M,y,cW,50,NAVY);R(M,y,5,50,GREEN);
-    doc.setFontSize(13);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Estimated Annual Impact',M+18,y+20);
-    doc.setFontSize(9);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('on $'+ar.toLocaleString()+'/year revenue',M+18,y+34);
-    doc.setFontSize(30);doc.setTextColor(168,227,0);doc.setFont('helvetica','bold');doc.text('$'+Math.round(tot).toLocaleString(),W-M-14,y+32,{align:'right'});
-    y+=56;doc.setFontSize(7);doc.setTextColor(GRAY_LT[0],GRAY_LT[1],GRAY_LT[2]);doc.setFont('helvetica','italic');doc.text('* Estimates based on industry averages.',W/2,y,{align:'center'});
+  // Compute ROI items for PDF
+  var ri=roiInputs;var pdfItems=[];
+  if(ri.adminHrs&&ri.adminRate){var at=ri.adminHrs*ri.adminRate*52;var as=at*0.55;pdfItems.push({cat:'Admin Time',today:ri.adminHrs+' hrs/week ($'+Math.round(at).toLocaleString()+'/yr)',jobber:Math.round(ri.adminHrs*0.45)+' hrs/week ($'+Math.round(at-as).toLocaleString()+'/yr)',save:as});}
+  if(ri.quotesPerWeek&&ri.quoteCloseRate&&ri.avgJobValue){var cw2=ri.quotesPerWeek*(ri.quoteCloseRate/100);var ir=Math.min(ri.quoteCloseRate+12,95);var nw=ri.quotesPerWeek*(ir/100);var er=(nw-cw2)*52*ri.avgJobValue;pdfItems.push({cat:'Quote Conversion',today:Math.round(ri.quoteCloseRate)+'% close rate',jobber:Math.round(ir)+'% with follow-ups',save:er});}
+  if(ri.daysToCollect&&ri.monthlyRevenue){var ci=ri.monthlyRevenue*12*(14/365)*0.05;pdfItems.push({cat:'Payment Speed',today:ri.daysToCollect+' days to collect',jobber:Math.max(ri.daysToCollect-14,1)+' days with digital payment',save:ci});}
+  if(ri.jobsPerDay&&ri.crewCount&&ri.avgJobValue){var ep=ri.jobsPerDay*0.15;var rv=ep*ri.crewCount*250*ri.avgJobValue;pdfItems.push({cat:'Route Efficiency',today:ri.jobsPerDay+' jobs/crew/day',jobber:Math.round((ri.jobsPerDay+ep)*10)/10+' with optimization',save:rv});}
+  if(ri.noShowRate&&ri.avgJobValue&&ri.jobsPerDay&&ri.crewCount){var tj=ri.jobsPerDay*ri.crewCount*250;var rr=tj*(ri.noShowRate/100)*0.5*ri.avgJobValue;pdfItems.push({cat:'Cancellation Recovery',today:ri.noShowRate+'% no-show rate',jobber:Math.round(ri.noShowRate*0.5)+'% with reminders',save:rr});}
+  if(ri.coldQuotePercent&&ri.quotesPerWeek&&ri.avgJobValue){var cr=ri.quotesPerWeek*(ri.coldQuotePercent/100)*0.25*52*ri.avgJobValue;pdfItems.push({cat:'Cold Quote Recovery',today:ri.coldQuotePercent+'% go cold',jobber:Math.round(ri.coldQuotePercent*0.75)+'% with auto follow-ups',save:cr});}
+
+  var pdfTotal=0;pdfItems.forEach(function(it){pdfTotal+=it.save||0;});
+
+  if(pdfItems.length){
+    // Today vs Jobber table
+    var colW=cW/2;
+    R(M,y,colW,24,[253,237,236]);R(M+colW,y,colW,24,[240,255,220]);
+    doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.setTextColor(200,50,50);doc.text('TODAY (WITHOUT JOBBER)',M+14,y+16);
+    doc.setTextColor(GD[0],GD[1],GD[2]);doc.text('WITH JOBBER',M+colW+14,y+16);y+=24;
+
+    pdfItems.forEach(function(it,idx){
+      chk(52);var ry=y;
+      R(M,ry,cW,48,idx%2===0?WH:RA);
+      doc.setFontSize(8);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','bold');doc.text(it.cat.toUpperCase(),M+14,ry+14);doc.text(it.cat.toUpperCase(),M+colW+14,ry+14);
+      doc.setFontSize(13);doc.setFont('helvetica','normal');
+      doc.setTextColor(NV[0],NV[1],NV[2]);doc.text(it.today,M+14,ry+30);
+      doc.setTextColor(GD[0],GD[1],GD[2]);doc.text(it.jobber,M+colW+14,ry+30);
+      doc.setFontSize(9);doc.setTextColor(GD[0],GD[1],GD[2]);doc.setFont('helvetica','bold');doc.text('+$'+Math.round(it.save).toLocaleString(),M+colW+14,ry+42);
+      doc.setDrawColor(BD[0],BD[1],BD[2]);doc.setLineWidth(0.3);doc.line(M,ry+48,M+cW,ry+48);
+      doc.setDrawColor(GX[0],GX[1],GX[2]);doc.line(M+colW,ry,M+colW,ry+48);
+      y+=48;
+    });
+
+    // Total bar
+    y+=6;R(M,y,cW,56,NV);R(M,y,5,56,GR);
+    doc.setFontSize(14);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Estimated Annual Impact',M+18,y+22);
+    doc.setFontSize(10);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('Based on the numbers you shared in our conversation',M+18,y+38);
+    doc.setFontSize(32);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','bold');doc.text('$'+Math.round(pdfTotal).toLocaleString(),W-M-14,y+34,{align:'right'});
+    y+=62;
+
+    var pb=Math.max(1,Math.round(588/pdfTotal*52));
+    doc.setFontSize(9);doc.setTextColor(GY[0],GY[1],GY[2]);doc.setFont('helvetica','normal');
+    doc.text('At $49/month, Jobber pays for itself in approximately '+pb+' week'+(pb>1?'s':'')+'.  *Based on your inputs. Actual results may vary.',M,y);
+  } else {
+    // Generic stats if no ROI inputs
+    doc.setFontSize(18);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text('WHAT OUR MEMBERS ARE SEEING',W/2,y,{align:'center'});y+=24;
+    var stats=[{n:'7+',u:'hrs/week saved'},{n:'4x',u:'faster payments'},{n:'2x',u:'faster quotes'},{n:'29M+',u:'jobs completed'}];
+    var sw=(cW-42)/4;
+    stats.forEach(function(st,si){var cx=M+si*(sw+14);R(cx,y,sw,70,[245,248,250]);R(cx,y,sw,4,GR);doc.setFontSize(28);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');doc.text(st.n,cx+sw/2,y+30,{align:'center'});doc.setFontSize(9);doc.setTextColor(GD[0],GD[1],GD[2]);doc.setFont('helvetica','normal');doc.text(st.u,cx+sw/2,y+48,{align:'center'});});
   }
 
   // FOOTER
-  var fy2=H-36;R(0,fy2,W,36,NAVY);R(0,fy2,W,2,GREEN);
-  doc.setFontSize(8);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('Jobber - Helping people in small business be successful',M,fy2+20);
-  doc.setFontSize(8);doc.setTextColor(168,227,0);doc.text('getjobber.com',W-M,fy2+20,{align:'right'});
-  doc.link(W-M-doc.getTextWidth('getjobber.com'),fy2+10,doc.getTextWidth('getjobber.com'),14,{url:'https://www.getjobber.com'});
-  var fname=(biz?biz.replace(/[^a-zA-Z0-9 ]/g,'').trim().replace(/\s+/g,'_'):'Prospect')+'_Jobber_Action_Plan.pdf';
-  doc.save(fname);
+  var fy=H-36;R(0,fy,W,36,NV);R(0,fy,W,2,GR);doc.setFontSize(8);doc.setTextColor(180,200,210);doc.setFont('helvetica','normal');doc.text('Jobber - Helping people in small business be successful',M,fy+20);doc.setFontSize(8);doc.setTextColor(GR[0],GR[1],GR[2]);doc.text('getjobber.com',W-M,fy+20,{align:'right'});doc.link(W-M-doc.getTextWidth('getjobber.com'),fy+10,doc.getTextWidth('getjobber.com'),14,{url:'https://www.getjobber.com'});
+  doc.save((biz?biz.replace(/[^a-zA-Z0-9 ]/g,'').trim().replace(/\s+/g,'_'):'Prospect')+'_Jobber_Action_Plan.pdf');
 }
 
+// INIT
 refreshHdr();updateBadges();loadSaved();
 window.addEventListener('beforeunload',function(e){if(rows.length>0){e.preventDefault();e.returnValue='';}});
 </script>
