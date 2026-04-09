@@ -478,12 +478,15 @@ function validateForExport(){
 function exportPDF(){
   const issues=validateForExport();
   if(issues.length){showToast('Before exporting: '+issues.join(', '));return;}
-  if(!window.jspdf){
-    const btn=document.getElementById('btnExportPDF');btn.textContent='Loading PDF...';btn.disabled=true;
-    loadJsPDF().then(()=>{btn.textContent='⬇ Download PDF';btn.disabled=false;_doExportPDF();}).catch(e=>{btn.textContent='⬇ Download PDF';btn.disabled=false;alert(e.message);});
-    return;
-  }
-  _doExportPDF();
+  const btn=document.getElementById('btnExportPDF');
+  btn.textContent='Generating PDF...';btn.disabled=true;
+  loadJsPDF().then(()=>{
+    try{_doExportPDF();}catch(e){console.error(e);alert('PDF generation error: '+e.message);}
+    btn.textContent='⬇ Download PDF';btn.disabled=false;
+  }).catch(e=>{
+    btn.textContent='⬇ Download PDF';btn.disabled=false;
+    alert('Could not load PDF library. Check your internet connection and try again.\n\n'+e.message);
+  });
 }
 
 function _doExportPDF(){
