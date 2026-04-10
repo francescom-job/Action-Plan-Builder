@@ -201,7 +201,7 @@ body.exporting .cell-n .cn-input{border-style:none;}body.exporting .ns-input{bor
 <div class="doc-chart"><div class="dc-heads"><div class="dc-h h1">Business Goals</div><div class="dc-h h2">Jobber Features</div><div class="dc-h h3">Impact</div><div class="dc-h h4">Notes</div></div><div id="chartBody"><div style="text-align:center;padding:48px 20px;color:var(--text3)">Select an industry, then add goals</div></div></div>
 <div class="roi-doc" id="roiDoc" style="display:none"><div class="roi-doc-title">Return on Investment Analysis</div><div class="roi-summary-bar"><div><div class="rs-label">Your Estimated Annual Impact</div><div class="rs-sub" id="roiDocSub"></div></div><div class="rs-total"><div class="rs-num" id="roiDocTotal">$0</div><div class="rs-per">per year</div></div></div><div class="roi-compare" id="roiCompare"><div class="roi-col-head today">Today (Without Jobber)</div><div class="roi-col-head jobber">With Jobber</div></div><div class="roi-payback" id="roiPayback"></div></div>
 <div class="next-section"><div class="ns-title">Next Steps</div><div id="stepsBody"><div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Add next steps</div></div><button class="ns-add no-print" onclick="addStep()">+ Add Next Step</button></div>
-<div class="doc-foot"><div><strong>Jobber</strong> -- Helping people in small business be successful</div><div>getjobber.com</div></div>
+<div class="doc-foot"><div><strong>Jobber</strong> -- Helping people in service businesses be successful</div><div>getjobber.com</div></div>
 </div></div>
 <script>
 var LINKS={"quoting":"https://www.getjobber.com/features/quotes/","quote":"https://www.getjobber.com/features/quotes/","scheduling":"https://www.getjobber.com/features/scheduling/","calendar":"https://www.getjobber.com/features/scheduling/","recurring":"https://www.getjobber.com/features/scheduling/","invoic":"https://www.getjobber.com/features/field-service-invoicing-software/","payment":"https://www.getjobber.com/features/field-service-credit-card-processing/","billing":"https://www.getjobber.com/features/field-service-credit-card-processing/","client hub":"https://www.getjobber.com/features/client-hub/","crm":"https://www.getjobber.com/features/field-service-crm/","route":"https://www.getjobber.com/features/scheduling/","mobile app":"https://www.getjobber.com/features/field-service-management-app/","job costing":"https://www.getjobber.com/features/job-costing-software/","time tracking":"https://www.getjobber.com/features/automatic-time-tracking-software/","gps":"https://www.getjobber.com/features/gps-tracking-app/","online booking":"https://www.getjobber.com/features/online-booking/","booking":"https://www.getjobber.com/features/online-booking/","automation":"https://www.getjobber.com/features/automate-repetitive-tasks/","automated":"https://www.getjobber.com/features/automate-repetitive-tasks/","reminder":"https://www.getjobber.com/features/automate-repetitive-tasks/","texting":"https://www.getjobber.com/features/simplify-customer-communications/","reporting":"https://www.getjobber.com/features/field-service-reporting/","insights":"https://www.getjobber.com/features/field-service-reporting/","quickbooks":"https://www.getjobber.com/features/quickbooks-sync/","website":"https://www.getjobber.com/features/marketing-tools/website/","review":"https://www.getjobber.com/features/marketing-tools/reviews/","referral":"https://www.getjobber.com/features/marketing-tools/referrals/","marketing":"https://www.getjobber.com/features/marketing-suite/","photo":"https://www.getjobber.com/features/field-service-management-app/","checklist":"https://www.getjobber.com/features/quote-request-form/","expense":"https://www.getjobber.com/features/job-costing-software/"};
@@ -300,7 +300,7 @@ function drawFooter(){
   brandImg('logoWhite',M,H-34,100);
   // "Helping people..." text
   doc.setFontSize(8);doc.setTextColor(180,195,210);doc.setFont('helvetica','normal');
-  doc.text('Helping people in small business be successful',M+108,H-20);
+  doc.text('Helping people in service businesses be successful',M+108,H-20);
   // getjobber.com right
   doc.setFontSize(9);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');
   doc.text('getjobber.com',W-M,H-18,{align:'right'});
@@ -337,7 +337,7 @@ doc.text('Action Plan for '+biz,M,50);
 
 // Subtitle in green
 doc.setFontSize(11);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');
-doc.text('A tailored roadmap to streamline and grow your '+lb.toLowerCase()+' business',M,68);
+doc.text('A plan to help you run and grow your '+lb.toLowerCase()+' business',M,68);
 
 // Metadata line
 var mp=[];
@@ -374,7 +374,7 @@ R(M,y,cols[0],22,NV);R(M+cols[0],y,cols[1],22,NV);
 R(M+cols[0]+cols[1],y,cols[2],22,NV);R(M+cols[0]+cols[1]+cols[2],y,cols[3],22,NV);
 doc.setFontSize(8);doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');
 var hx=M;
-['BUSINESS GOALS','JOBBER FEATURES','IMPACT & VALUE','NOTES'].forEach(function(t,i){
+['BUSINESS GOALS','JOBBER FEATURES','IMPACT AND VALUE','NOTES'].forEach(function(t,i){
   doc.text(t,hx+10,y+14);hx+=cols[i];
 });
 y+=22;
@@ -492,16 +492,16 @@ doc.text('Why Jobber?',M,46);
 
 // Subtitle in green
 doc.setFontSize(11);doc.setTextColor(GR[0],GR[1],GR[2]);doc.setFont('helvetica','normal');
-doc.text('Real results from businesses like yours',M,64);
+doc.text('Real results from service pros like you',M,64);
 
 // Green brush accent at bottom edge of navy header, matching page 1
 try{doc.addImage(BRAND_ASSETS.brushThick,'PNG',0,78,W*0.6,10,undefined,'FAST',0);}catch(e){}
 
 y=112;
 
-// ---- WHAT OUR MEMBERS ARE SEEING ----
+// ---- WHAT OUR CUSTOMERS ARE SEEING ----
 doc.setFontSize(14);doc.setTextColor(NV[0],NV[1],NV[2]);doc.setFont('helvetica','bold');
-doc.text('WHAT OUR MEMBERS ARE SEEING',W/2,y,{align:'center'});
+doc.text('WHAT OUR CUSTOMERS ARE SEEING',W/2,y,{align:'center'});
 
 // Brush underline under heading (tight, just under text ~180pt)
 try{doc.addImage(BRAND_ASSETS.brushMed,'PNG',W/2-90,y+3,180,5,undefined,'FAST',0);}catch(e){}
@@ -510,10 +510,10 @@ y+=20;
 
 // 4 stat cards with borders
 var stats=[
-  {num:'7+',label:'hrs/week',sub:'saved on admin with',sub2:'automated workflows'},
+  {num:'12+',label:'hrs/week',sub:'saved on admin with',sub2:'automated workflows'},
   {num:'4x',label:'faster',sub:'payments vs. checks',sub2:'with Jobber Payments'},
-  {num:'2x',label:'faster quotes',sub:'professional quoting',sub2:'with online approval'},
-  {num:'29M+',label:'jobs',sub:'completed by Jobber-',sub2:'powered businesses'}
+  {num:'37%',label:'avg revenue growth',sub:'in your first year',sub2:'with Jobber'},
+  {num:'300K+',label:'service pros',sub:'trust Jobber to run',sub2:'their business today'}
 ];
 var sw=(cW-36)/4;
 stats.forEach(function(st,si){
